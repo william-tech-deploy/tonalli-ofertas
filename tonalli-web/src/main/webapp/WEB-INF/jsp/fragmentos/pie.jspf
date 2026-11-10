@@ -1,3 +1,5 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Cada archivo JSP se lee con SU propia codificación: sin esta línea, Tomcat lee este fragmento como ISO-8859-1 y rompe los acentos. --%>
 </main>
 <footer class="pie">Tonalli Web · ITCA-FEPADE Santa Ana · Utilización de Frameworks para el desarrollo de software</footer>
 </body>

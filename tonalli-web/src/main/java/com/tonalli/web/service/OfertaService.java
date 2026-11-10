@@ -133,6 +133,7 @@ public class OfertaService {
         o.setTienda(Formato.limpiarTexto(form.getTienda()));
         o.setPrecioCentavos(precio);
         o.setPrecioAnteriorCentavos(anterior);
+        o.setEnlace(Formato.enlaceONulo(form.getEnlace()));
         o.setCategoria(categoria);
         o.setAutor(usuarios.getReferenceById(autorId));
         return ofertas.save(o).getId();
@@ -209,7 +210,7 @@ public class OfertaService {
     }
 
     /** Peso del voto según la karma del votante: 1 (nuevo), 2 (desde 10) o 3 (desde 50). */
-    static int pesoPorKarma(int karma) {
+    public static int pesoPorKarma(int karma) {
         if (karma >= 50) {
             return 3;
         }
@@ -219,7 +220,7 @@ public class OfertaService {
     static OfertaVista vista(Oferta o, long temperatura) {
         return new OfertaVista(o.getId(), o.getTitulo(), o.getTienda(), o.getCategoria().getNombre(),
                 o.getAutor().getNombre(), o.getAutor().getId(), o.getPrecioCentavos(), o.getPrecioAnteriorCentavos(),
-                temperatura, Formato.fecha(o.getCreadaEn()), o.getEstado());
+                temperatura, Formato.fecha(o.getCreadaEn()), o.getEstado(), o.getEnlace());
     }
 
     private Oferta ofertaActiva(Long id) {

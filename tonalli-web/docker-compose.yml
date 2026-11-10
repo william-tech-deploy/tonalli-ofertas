@@ -33,6 +33,9 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       TONALLI_ADMIN_CORREO: ${TONALLI_ADMIN_CORREO:-}
       TONALLI_ADMIN_PASSWORD: ${TONALLI_ADMIN_PASSWORD:-}
+      # Datos de ejemplo: apagados salvo que el .env diga TONALLI_DEMO=true. Nunca en producción.
+      TONALLI_DEMO: ${TONALLI_DEMO:-false}
+      TONALLI_DEMO_PASSWORD: ${TONALLI_DEMO_PASSWORD:-}
       BASE_URL: ${BASE_URL:-http://localhost:8080}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       VERIFICACION_OBLIGATORIA: ${VERIFICACION_OBLIGATORIA:-true}
@@ -64,7 +67,9 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      DOMINIO: ${DOMINIO:?Define DOMINIO en .env para usar HTTPS}
+      # Valor por defecto "localhost": Compose interpola todo el archivo aunque este perfil no se use,
+      # y exigir la variable impedía levantar el sitio en local. Para HTTPS real, define DOMINIO en .env.
+      DOMINIO: ${DOMINIO:-localhost}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddydata:/data

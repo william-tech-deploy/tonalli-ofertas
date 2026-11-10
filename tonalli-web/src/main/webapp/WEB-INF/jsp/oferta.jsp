@@ -20,6 +20,11 @@
             <span class="descuento">-<c:out value="${oferta.descuento}"/>%</span>
         </c:if>
     </p>
+    <c:if test="${not empty oferta.enlace}">
+        <%-- noopener/noreferrer: la tienda no recibe datos de esta página ni puede manipular la pestaña de origen.
+             nofollow/ugc: el enlace lo puso un usuario; no se le transfiere reputación en buscadores. --%>
+        <p><a class="boton-tienda" href="<c:out value='${oferta.enlace}'/>" target="_blank" rel="noopener noreferrer nofollow ugc">Ver en la tienda ↗</a></p>
+    </c:if>
     <p>Temperatura: <span class="temp ${oferta.temperatura >= 100 ? 'caliente' : oferta.temperatura >= 0 ? 'tibia' : 'frio'}"><c:out value="${oferta.temperatura}"/>° <span class="palabra">${oferta.temperatura >= 100 ? 'Caliente' : oferta.temperatura >= 0 ? 'Tibia' : 'Fría'}</span></span></p>
 
     <c:choose>

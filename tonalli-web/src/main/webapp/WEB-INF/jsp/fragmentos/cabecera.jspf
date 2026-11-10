@@ -1,3 +1,5 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Cada archivo JSP se lee con SU propia codificación: sin esta línea, Tomcat lee este fragmento como ISO-8859-1 y rompe los acentos. --%>
 <fmt:setLocale value="en_US" scope="request"/>
 <!DOCTYPE html>
 <html lang="es">
