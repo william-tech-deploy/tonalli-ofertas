@@ -48,7 +48,11 @@ tonalli-proyecto/
 3. Elige un emulador (Device Manager) o conecta un teléfono con depuración USB.
 4. Pulsa **Run ▶**.
 
-Requisitos: Android Studio reciente (usa su JDK incluido, 17 o superior) y Android 8.0 o superior en el dispositivo (`minSdk 26`).
+**Si el sync falla con "Incompatible Gradle JVM version"** (Android Studio usa Java 25 y Gradle 8.14 solo llega a Java 24):
+pulsa el enlace "Apply compatible Gradle JDK configuration and sync", o en `File > Settings > Build Tools > Gradle` elige **Gradle JDK = jbr-21** (o un JDK 17/21) y sincroniza de nuevo.
+Abre siempre la carpeta `tonalli-proyecto/android` **sin separarla** de `tonalli-proyecto/web`: la tarea `syncWeb` copia ahí la interfaz.
+
+Requisitos: Android Studio reciente (JDK 17 o 21, no 25) y Android 8.0 o superior en el dispositivo (`minSdk 26`).
 
 ## 2. Cómo se relacionan la web y la app
 
