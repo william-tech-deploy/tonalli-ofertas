@@ -1,0 +1,15 @@
+# secretos y datos locales: NUNCA se suben
+.env
+*.db
+*.db-wal
+*.db-shm
+local.properties
+*.jks
+*.keystore
+# dependencias y compilados
+node_modules/
+build/
+.gradle/
+.idea/
+target/
+*.log

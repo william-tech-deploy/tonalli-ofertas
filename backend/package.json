@@ -1,0 +1,20 @@
+{
+  "name": "tonalli-backend",
+  "version": "1.0.0",
+  "description": "API segura de Tonalli (ofertas colaborativas). Sin dependencias de terceros en tiempo de ejecución.",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "start": "node --disable-proto=delete --max-http-header-size=16384 src/server.js",
+    "start:hardened": "node --disable-proto=delete --max-http-header-size=16384 --experimental-permission --allow-fs-read=. --allow-fs-write=./data src/server.js",
+    "migrate": "node scripts/migrate.js",
+    "make-moderator": "node scripts/make-moderator.js",
+    "backup": "node scripts/backup.js",
+    "check:security": "node scripts/check-security.js",
+    "test": "node --test --test-concurrency=1 \"test/*.test.js\""
+  },
+  "dependencies": {}
+}

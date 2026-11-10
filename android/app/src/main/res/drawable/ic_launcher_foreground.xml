@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Símbolo Tonalli (T-termómetro) para el ícono adaptativo: lienzo de 108 dp, todo dentro de la zona segura de 66 dp.
+     Geometría tomada de design/logos/android-adaptive-primer-plano.svg. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:pathData="M47.51,39.69 A6.49,6.49 0 0 1 60.49,39.69 L60.49,63.585 A6.49,6.49 0 0 1 47.51,63.585 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="54" android:startY="33.2"
+                android:endX="54" android:endY="70.4"
+                android:startColor="#F5A524"
+                android:endColor="#E8501F" />
+        </aapt:attr>
+    </path>
+    <path
+        android:fillColor="#E8501F"
+        android:pathData="M43.085,70.37 a10.915,10.915 0 1,0 21.83,0 a10.915,10.915 0 1,0 -21.83,0" />
+    <path
+        android:fillColor="#FFF8EF"
+        android:pathData="M35.71,26.71 L72.29,26.71 A6.49,6.49 0 0 1 72.29,39.69 L35.71,39.69 A6.49,6.49 0 0 1 35.71,26.71 Z" />
+</vector>

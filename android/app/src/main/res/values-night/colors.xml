@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- values-night/colors.xml (tema oscuro) -->
+<resources>
+    <color name="tonalli_background">#0B1220</color>
+    <color name="tonalli_surface">#14213D</color>
+    <color name="tonalli_surface_variant">#1D2D52</color>
+    <color name="tonalli_on_background">#FFF8EF</color>
+    <color name="tonalli_on_surface">#FFF8EF</color>
+    <color name="tonalli_on_surface_muted">#B8C2D9</color>
+    <color name="tonalli_primary">#FF7A4D</color>
+    <color name="tonalli_on_primary">#14213D</color>
+    <color name="tonalli_primary_container">#4A1E10</color>
+    <color name="tonalli_on_primary_container">#FFB59B</color>
+    <color name="tonalli_secondary">#FFF8EF</color>
+    <color name="tonalli_on_secondary">#14213D</color>
+    <color name="tonalli_tertiary">#4CC9D9</color>
+    <color name="tonalli_on_tertiary">#0B1220</color>
+    <color name="tonalli_error">#FFB4AB</color>
+    <color name="tonalli_on_error">#4A0B07</color>
+    <color name="tonalli_outline">#7F90B5</color>
+    <color name="tonalli_outline_subtle">#2C3E66</color>
+    <color name="tonalli_focus_ring">#4CC9D9</color>
+    <color name="tonalli_hot_bg">#4A1E10</color>
+    <color name="tonalli_hot_fg">#FFB59B</color>
+    <color name="tonalli_warm_bg">#3F2D08</color>
+    <color name="tonalli_warm_fg">#FFD27A</color>
+    <color name="tonalli_cold_bg">#0E3A44</color>
+    <color name="tonalli_cold_fg">#8FE0EE</color>
+</resources>

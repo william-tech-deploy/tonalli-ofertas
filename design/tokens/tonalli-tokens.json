@@ -1,0 +1,156 @@
+{
+  "name": "Tonalli",
+  "version": "1.0.0",
+  "brand": {
+    "tinta": "#14213D",
+    "brasa": "#E8501F",
+    "brasaTexto": "#C73E14",
+    "sol": "#F5A524",
+    "solTexto": "#8A5300",
+    "frio": "#1AA6B7",
+    "frioTexto": "#0B6E7D",
+    "papel": "#FFF8EF",
+    "arena": "#F3E8D8"
+  },
+  "themes": {
+    "light": {
+      "background": "#FFF8EF",
+      "surface": "#FFFFFF",
+      "surfaceVariant": "#F3E8D8",
+      "onBackground": "#14213D",
+      "onSurface": "#14213D",
+      "onSurfaceMuted": "#4A5877",
+      "primary": "#C73E14",
+      "onPrimary": "#FFFFFF",
+      "primaryContainer": "#FFE3D8",
+      "onPrimaryContainer": "#7A2308",
+      "secondary": "#14213D",
+      "onSecondary": "#FFF8EF",
+      "tertiary": "#0B6E7D",
+      "onTertiary": "#FFFFFF",
+      "error": "#B3261E",
+      "onError": "#FFFFFF",
+      "outline": "#7A6A52",
+      "outlineSubtle": "#E6D8C3",
+      "focusRing": "#0B6E7D",
+      "hotBg": "#FFE3D8",
+      "hotFg": "#9A2F0C",
+      "warmBg": "#FFEFC7",
+      "warmFg": "#7A4A00",
+      "coldBg": "#D9F0F3",
+      "coldFg": "#0A5562"
+    },
+    "dark": {
+      "background": "#0B1220",
+      "surface": "#14213D",
+      "surfaceVariant": "#1D2D52",
+      "onBackground": "#FFF8EF",
+      "onSurface": "#FFF8EF",
+      "onSurfaceMuted": "#B8C2D9",
+      "primary": "#FF7A4D",
+      "onPrimary": "#14213D",
+      "primaryContainer": "#4A1E10",
+      "onPrimaryContainer": "#FFB59B",
+      "secondary": "#FFF8EF",
+      "onSecondary": "#14213D",
+      "tertiary": "#4CC9D9",
+      "onTertiary": "#0B1220",
+      "error": "#FFB4AB",
+      "onError": "#4A0B07",
+      "outline": "#7F90B5",
+      "outlineSubtle": "#2C3E66",
+      "focusRing": "#4CC9D9",
+      "hotBg": "#4A1E10",
+      "hotFg": "#FFB59B",
+      "warmBg": "#3F2D08",
+      "warmFg": "#FFD27A",
+      "coldBg": "#0E3A44",
+      "coldFg": "#8FE0EE"
+    }
+  },
+  "typography": {
+    "display": {
+      "family": "Bricolage Grotesque",
+      "weights": [
+        700,
+        800
+      ],
+      "use": "Titulares, precios grandes, marca"
+    },
+    "body": {
+      "family": "Plus Jakarta Sans",
+      "weights": [
+        400,
+        500,
+        600,
+        700
+      ],
+      "use": "Texto, botones, etiquetas, formularios"
+    },
+    "scale_sp": {
+      "display": [
+        32,
+        40,
+        800
+      ],
+      "headline": [
+        24,
+        32,
+        700
+      ],
+      "title": [
+        18,
+        24,
+        700
+      ],
+      "priceXL": [
+        28,
+        32,
+        800
+      ],
+      "body": [
+        16,
+        24,
+        400
+      ],
+      "bodySmall": [
+        14,
+        20,
+        400
+      ],
+      "label": [
+        12,
+        16,
+        600
+      ]
+    },
+    "note": "scale_sp = [tamaño sp, interlineado sp, peso]. No usar menos de 12 sp. Fuentes escalables con el tamaño del sistema."
+  },
+  "spacing_dp": [
+    0,
+    4,
+    8,
+    12,
+    16,
+    24,
+    32,
+    48,
+    64
+  ],
+  "radius_dp": {
+    "chip": 999,
+    "button": 999,
+    "field": 12,
+    "card": 16,
+    "sheet": 28
+  },
+  "motion": {
+    "fast_ms": 120,
+    "base_ms": 200,
+    "slow_ms": 320,
+    "easing": "cubic-bezier(0.2,0,0,1)",
+    "reduceMotion": "respetar la escala de animación del sistema; sin movimiento, mostrar el estado final"
+  },
+  "touch_target_dp": 48,
+  "min_icon_size_px": 24
+}

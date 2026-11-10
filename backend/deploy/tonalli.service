@@ -1,0 +1,41 @@
+# Alternativa sin Docker: systemd con aislamiento fuerte.
+# Instalar:  sudo useradd --system --home /opt/tonalli --shell /usr/sbin/nologin tonalli
+#            sudo cp -r backend /opt/tonalli/app ; sudo install -d -o tonalli -g tonalli -m 700 /opt/tonalli/data
+#            sudo install -m 600 -o root -g root .env /etc/tonalli.env
+#            sudo cp deploy/tonalli.service /etc/systemd/system/ && sudo systemctl enable --now tonalli
+# Pon un proxy con HTTPS (Caddy o Nginx) delante; la app escucha solo en 127.0.0.1:3000.
+[Unit]
+Description=Tonalli API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=tonalli
+Group=tonalli
+WorkingDirectory=/opt/tonalli/app
+EnvironmentFile=/etc/tonalli.env
+Environment=NODE_ENV=production HOST=127.0.0.1 PORT=3000 TRUST_PROXY_HOPS=1 DATABASE_PATH=/opt/tonalli/data/tonalli.db
+ExecStart=/usr/bin/node --disable-proto=delete --max-http-header-size=16384 --experimental-permission --allow-fs-read=/opt/tonalli/app --allow-fs-write=/opt/tonalli/data src/server.js
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ReadWritePaths=/opt/tonalli/data
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=false
+SystemCallFilter=@system-service
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+UMask=0077
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target

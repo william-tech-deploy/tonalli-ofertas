@@ -1,0 +1,22 @@
+# Caddy obtiene y renueva el certificado HTTPS solo (Let's Encrypt). Requiere que API_DOMAIN apunte al VPS.
+{$API_DOMAIN} {
+	encode zstd gzip
+	request_body {
+		max_size 600KB      # tope duro antes de llegar a la app (la app aplica además su propio tope por ruta)
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+	reverse_proxy api:3000 {
+		# Caddy envía X-Forwarded-For/Proto reales; la app confía en exactamente 1 salto (TRUST_PROXY_HOPS=1).
+		transport http {
+			dial_timeout 5s
+			response_header_timeout 30s
+		}
+	}
+	log {
+		output stdout
+		format json
+	}
+}

@@ -1,0 +1,16 @@
+# Compilación
+target/
+*.war
+*.jar
+
+# Secretos: NUNCA subir
+.env
+
+# IntelliJ IDEA
+.idea/
+*.iml
+out/
+
+# Sistema
+.DS_Store
+Thumbs.db

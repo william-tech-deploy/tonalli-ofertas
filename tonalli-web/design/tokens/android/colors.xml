@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- values/colors.xml: marca y tema claro. El tema oscuro está en colors-night.xml (copiar a values-night/colors.xml). -->
+<resources>
+    <color name="brand_tinta">#14213D</color>
+    <color name="brand_brasa">#E8501F</color>
+    <color name="brand_brasa_texto">#C73E14</color>
+    <color name="brand_sol">#F5A524</color>
+    <color name="brand_sol_texto">#8A5300</color>
+    <color name="brand_frio">#1AA6B7</color>
+    <color name="brand_frio_texto">#0B6E7D</color>
+    <color name="brand_papel">#FFF8EF</color>
+    <color name="brand_arena">#F3E8D8</color>
+    <color name="tonalli_background">#FFF8EF</color>
+    <color name="tonalli_surface">#FFFFFF</color>
+    <color name="tonalli_surface_variant">#F3E8D8</color>
+    <color name="tonalli_on_background">#14213D</color>
+    <color name="tonalli_on_surface">#14213D</color>
+    <color name="tonalli_on_surface_muted">#4A5877</color>
+    <color name="tonalli_primary">#C73E14</color>
+    <color name="tonalli_on_primary">#FFFFFF</color>
+    <color name="tonalli_primary_container">#FFE3D8</color>
+    <color name="tonalli_on_primary_container">#7A2308</color>
+    <color name="tonalli_secondary">#14213D</color>
+    <color name="tonalli_on_secondary">#FFF8EF</color>
+    <color name="tonalli_tertiary">#0B6E7D</color>
+    <color name="tonalli_on_tertiary">#FFFFFF</color>
+    <color name="tonalli_error">#B3261E</color>
+    <color name="tonalli_on_error">#FFFFFF</color>
+    <color name="tonalli_outline">#7A6A52</color>
+    <color name="tonalli_outline_subtle">#E6D8C3</color>
+    <color name="tonalli_focus_ring">#0B6E7D</color>
+    <color name="tonalli_hot_bg">#FFE3D8</color>
+    <color name="tonalli_hot_fg">#9A2F0C</color>
+    <color name="tonalli_warm_bg">#FFEFC7</color>
+    <color name="tonalli_warm_fg">#7A4A00</color>
+    <color name="tonalli_cold_bg">#D9F0F3</color>
+    <color name="tonalli_cold_fg">#0A5562</color>
+</resources>

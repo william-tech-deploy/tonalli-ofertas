@@ -1,0 +1,48 @@
+<fmt:setLocale value="en_US" scope="request"/>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><c:out value="${titulo}"/> · Tonalli</title>
+<meta name="theme-color" content="#14213D">
+<link rel="stylesheet" href="<c:url value='/css/estilo.css'/>">
+</head>
+<body>
+<header class="barra">
+    <a class="marca" href="<c:url value='/'/>"><svg class="logo" width="21" height="24" viewBox="64 64 384 440" aria-hidden="true" focusable="false"><defs><linearGradient id="lg" x1="0" y1="140" x2="0" y2="392" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F5A524"/><stop offset="1" stop-color="#E8501F"/></linearGradient></defs><rect x="212" y="140" width="88" height="250" rx="44" fill="url(#lg)"/><circle cx="256" cy="392" r="74" fill="#E8501F"/><rect x="88" y="96" width="336" height="88" rx="44" fill="#FFF8EF"/></svg>Tonalli</a>
+    <nav aria-label="Principal">
+        <a href="<c:url value='/'/>">Ofertas</a>
+        <c:if test="${pageContext.request.userPrincipal != null}">
+            <a href="<c:url value='/ofertas/nueva'/>">Publicar</a>
+            <a href="<c:url value='/alertas'/>">Alertas</a>
+            <a href="<c:url value='/propuestas'/>">Propuestas</a>
+            <c:if test="${pageContext.request.isUserInRole('MODERADOR') or pageContext.request.isUserInRole('ADMIN')}">
+                <a href="<c:url value='/moderacion'/>">Moderación</a>
+            </c:if>
+            <c:if test="${pageContext.request.isUserInRole('ADMIN')}">
+                <a href="<c:url value='/admin/usuarios'/>">Usuarios</a>
+                <a href="<c:url value='/admin/categorias'/>">Categorías</a>
+                <a href="<c:url value='/admin/graficos'/>">Gráficos</a>
+            </c:if>
+        </c:if>
+    </nav>
+    <div class="sesion">
+        <c:choose>
+            <c:when test="${pageContext.request.userPrincipal != null}">
+                <span class="usuario"><c:out value="${pageContext.request.remoteUser}"/></span>
+                <form method="post" action="<c:url value='/logout'/>" class="en-linea">
+                    <input type="hidden" name="<c:out value='${_csrf.parameterName}'/>" value="<c:out value='${_csrf.token}'/>">
+                    <button type="submit" class="enlace">Salir</button>
+                </form>
+            </c:when>
+            <c:otherwise>
+                <a href="<c:url value='/login'/>">Iniciar sesión</a>
+                <a href="<c:url value='/registro'/>">Registrarse</a>
+            </c:otherwise>
+        </c:choose>
+    </div>
+</header>
+<main class="contenedor">
+<c:if test="${not empty error}"><p class="aviso error" role="alert"><c:out value="${error}"/></p></c:if>
+<c:if test="${not empty ok}"><p class="aviso ok" role="status"><c:out value="${ok}"/></p></c:if>

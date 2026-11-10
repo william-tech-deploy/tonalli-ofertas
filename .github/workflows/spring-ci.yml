@@ -1,0 +1,17 @@
+name: spring-ci
+# Compila el sitio Spring Boot y ejecuta sus pruebas.
+on:
+  push: { paths: ['tonalli-web/**', '.github/workflows/spring-ci.yml'] }
+  pull_request: { paths: ['tonalli-web/**'] }
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: tonalli-web } }
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17', cache: maven }
+      - run: mvn -B verify

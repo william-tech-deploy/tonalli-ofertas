@@ -1,0 +1,1088 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#14213D">
+<!-- Dirección de la API (HTTPS). Vacía = modo demostración con datos locales. Ver README. -->
+<meta name="tonalli-api" content="">
+<style>
+html{color-scheme:light}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Tonalli</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='64 64 384 440'%3E%3Crect x='212' y='140' width='88' height='250' rx='44' fill='%23F5A524'/%3E%3Ccircle cx='256' cy='392' r='74' fill='%23E8501F'/%3E%3Crect x='88' y='96' width='336' height='88' rx='44' fill='%2314213D'/%3E%3C/svg%3E">
+<style>
+/* Layout: phone-width column (centered on wide screens): top band, scrolling main, bottom tab bar.
+   Marca Tonalli: papel cálido + tinta, un solo color de acción (naranja quemado). Cada estado de temperatura
+   (caliente, tibia, fría) lleva palabra e icono además de color. Tokens del kit de marca (tonalli-tokens.json). */
+:root{
+  --display:'Bricolage Grotesque','Avenir Next','Segoe UI',system-ui,sans-serif;
+  --body:'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif;
+  --mono:var(--body);
+  --bg:#FFF8EF; --desk:#F3E8D8; --surface:#FFFFFF; --surface-2:#F3E8D8;
+  --fg:#14213D; --muted:#4A5877; --line:#E6D8C3;
+  --accent:#C73E14; --accent-ink:#FFFFFF;
+  --hot:#9A2F0C; --warm:#7A4A00; --cold:#0A5562;
+  --hot-bg:#FFE3D8; --warm-bg:#FFEFC7; --cold-bg:#D9F0F3;
+  --g-hot:#E8501F; --g-warm:#F5A524; --g-cold:#1AA6B7;
+  --good:#1B7F47; --bad:#B3261E; --warn:#7A4A00; --on-good:#FFFFFF; --on-bad:#FFFFFF;
+  --c-super:#2A8F61; --c-tech:#2A74CC; --c-ropa:#B93A77;
+  --c-x1:#B87413; --c-x2:#0E8497; --c-x3:#7656BE; --c-x4:#80652F;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B1220; --desk:#070C16; --surface:#14213D; --surface-2:#1D2D52;
+  --fg:#FFF8EF; --muted:#B8C2D9; --line:#2C3E66;
+  --accent:#FF7A4D; --accent-ink:#14213D;
+  --hot:#FFB59B; --warm:#FFD27A; --cold:#8FE0EE;
+  --hot-bg:#4A1E10; --warm-bg:#3F2D08; --cold-bg:#0E3A44;
+  --good:#46C27A; --bad:#FFB4AB; --warn:#FFD27A; --on-good:#04120A; --on-bad:#4A0B07;
+  --c-super:#4FC48D; --c-tech:#5AA2F0; --c-ropa:#E56FA6;
+  --c-x1:#F0A94A; --c-x2:#4FC0D3; --c-x3:#A58BE8; --c-x4:#C3A16A;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B1220; --desk:#070C16; --surface:#14213D; --surface-2:#1D2D52;
+  --fg:#FFF8EF; --muted:#B8C2D9; --line:#2C3E66;
+  --accent:#FF7A4D; --accent-ink:#14213D;
+  --hot:#FFB59B; --warm:#FFD27A; --cold:#8FE0EE;
+  --hot-bg:#4A1E10; --warm-bg:#3F2D08; --cold-bg:#0E3A44;
+  --good:#46C27A; --bad:#FFB4AB; --warn:#FFD27A; --on-good:#04120A; --on-bad:#4A0B07;
+  --c-super:#4FC48D; --c-tech:#5AA2F0; --c-ropa:#E56FA6;
+  --c-x1:#F0A94A; --c-x2:#4FC0D3; --c-x3:#A58BE8; --c-x4:#C3A16A;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--desk);color:var(--fg);font:15px/1.45 var(--body);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit;color:inherit}
+h1,h2,h3,p{margin:0}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sp{flex:1}
+.ic{flex:none;display:block}
+
+#app{height:100%;max-width:480px;margin:0 auto;background:var(--bg);position:relative;overflow:hidden}
+@media (min-width:520px){#app{border-inline:1px solid var(--line)}}
+#screen{height:100%;display:flex;flex-direction:column}
+main{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding-bottom:24px}
+
+/* top band */
+.top{background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.top-in{display:flex;align-items:center;gap:8px;min-height:54px}
+.brand{font:800 24px/1 var(--display);letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.brand .logo{flex:none;display:block}
+.ttl{font:700 19px/1.2 var(--display);letter-spacing:-.01em;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.icbtn{appearance:none;border:0;background:transparent;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;cursor:pointer;position:relative;color:var(--fg)}
+.icbtn:hover{background:var(--surface-2)}
+.badge{position:absolute;top:5px;right:4px;min-width:18px;height:18px;border-radius:9px;background:var(--accent);color:var(--accent-ink);font:700 11px/18px var(--mono);text-align:center;padding:0 4px}
+.ctabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.ctabs::-webkit-scrollbar{display:none}
+.ctab{flex:none;appearance:none;border:0;background:transparent;color:var(--muted);display:flex;align-items:center;gap:7px;font:600 14px var(--body);padding:10px 10px 11px;border-bottom:3px solid transparent;cursor:pointer;min-height:44px}
+.ctab[aria-current=true]{color:var(--fg);border-bottom-color:var(--accent)}
+.ctab.add{padding-inline:8px}
+
+/* bottom tab bar */
+.bar{background:var(--surface);border-top:1px solid var(--line);flex:none}
+.bar-in{display:grid;grid-template-columns:repeat(5,1fr)}
+.tbtn{appearance:none;border:0;background:transparent;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:600 11px var(--body);cursor:pointer;min-height:58px;padding:6px 0}
+.tbtn[aria-current=page]{color:var(--accent)}
+.tbtn.post .ic{background:var(--accent);color:var(--accent-ink);border-radius:50%;padding:6px;width:32px;height:32px}
+
+/* generic */
+.pad{padding-block:16px}
+.stack{display:grid;gap:16px;grid-auto-rows:max-content;align-content:start}
+.lab{font:600 12px/1.2 var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.note{color:var(--muted);font-size:13px}
+.err{color:var(--bad);font-size:13px;min-height:0}
+.err:empty{display:none}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 14px var(--body);border-radius:10px;padding:10px 14px;cursor:pointer;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.block{width:100%}
+.btn.danger{color:var(--bad)}
+:is(button,a,input,textarea,select):focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.seg{display:flex;background:var(--surface-2);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;appearance:none;border:0;background:transparent;color:var(--muted);font:600 13px var(--body);padding:8px 10px;border-radius:8px;min-height:38px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.14)}
+.toolbar{padding-block:12px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.pill{display:inline-flex;align-items:center;gap:5px;font:600 11px/1 var(--body);letter-spacing:.02em;padding:4px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.v-real{color:var(--good);background:color-mix(in srgb,var(--good) 14%,var(--surface))}
+.v-fake{color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--surface))}
+.v-mild{color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,var(--surface))}
+.v-none{color:var(--muted)}
+
+/* fields */
+.field{display:grid;gap:6px}
+.field label,.field .lab{font:600 12px/1.2 var(--body);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.inp{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px;font-size:16px;min-height:46px}
+textarea.inp{min-height:84px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips input{position:absolute;opacity:0;pointer-events:none}
+.chips label{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 14px;font:600 14px var(--body);letter-spacing:0;text-transform:none;color:var(--fg);cursor:pointer;min-height:44px}
+.chips input:checked+label{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--fg)}
+.chips input:focus-visible+label{outline:2px solid var(--accent);outline-offset:2px}
+
+/* offer rows */
+.list{background:var(--surface);border-block:1px solid var(--line)}
+.row{display:grid;grid-template-columns:64px minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;text-align:left;appearance:none;border:0;border-bottom:1px solid var(--line);background:transparent;color:inherit;padding-block:12px;cursor:pointer}
+.row:last-child{border-bottom:0}
+.row:hover{background:color-mix(in srgb,var(--accent) 5%,var(--surface))}
+.thumb{width:64px;height:64px;border-radius:10px;overflow:hidden;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 15%,var(--surface))}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.rb{display:grid;gap:3px;min-width:0}
+.rt{font:600 15px/1.25 var(--body);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rm{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.pr b{font:700 17px var(--mono)}
+.pr s{font:500 12px var(--mono);color:var(--muted)}
+.pct{font:700 12px var(--mono);color:var(--good)}
+.temp{display:grid;justify-items:center;gap:2px;min-width:52px}
+.temp b{font:700 14px var(--mono)}
+.t-hot{color:var(--hot)}.t-warm{color:var(--warm)}.t-cold{color:var(--cold)}
+.tw{font:600 12px/1 var(--body);letter-spacing:.01em}
+.empty{padding:36px 16px;text-align:center;color:var(--muted)}
+
+/* detail */
+.hero{aspect-ratio:16/9;max-width:100%;border-radius:14px;overflow:hidden;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 15%,var(--surface))}
+.hero img{width:100%;height:100%;object-fit:cover}
+.dt{font:700 24px/1.15 var(--display);letter-spacing:-.015em;text-wrap:balance}
+.bigp{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.bigp b{font:700 34px var(--mono);letter-spacing:-.02em}
+.bigp s{font:500 16px var(--mono);color:var(--muted)}
+.vbox{display:grid;gap:8px;justify-items:start}
+.vbox p{color:var(--fg);font-size:14px}
+.gauge{height:10px;border-radius:5px;background:linear-gradient(90deg,var(--g-cold),var(--g-warm) 55%,var(--g-hot));position:relative;margin:10px 0 4px}
+.gauge i{position:absolute;top:-4px;width:18px;height:18px;border-radius:50%;background:var(--surface);border:3px solid var(--fg);transform:translateX(-50%)}
+.gnum{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.gnum b{font:700 30px var(--mono)}
+.votes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vb{appearance:none;border:1.5px solid var(--line);background:var(--surface);border-radius:12px;min-height:56px;font:700 15px var(--body);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.vb.pos{color:var(--good)}.vb.neg{color:var(--bad)}
+.vb.pos[aria-pressed=true]{background:var(--good);border-color:var(--good);color:var(--on-good)}
+.vb.neg[aria-pressed=true]{background:var(--bad);border-color:var(--bad);color:var(--on-bad)}
+.cmt{display:grid;gap:2px;padding:11px 0;border-bottom:1px solid var(--line)}
+.cmt:last-of-type{border-bottom:0}
+.cmt .who{font:600 13px var(--body)}
+.cmt .who span{font-weight:400;color:var(--muted);margin-left:6px}
+.sendrow{display:flex;gap:8px;align-items:flex-end}
+.sendrow textarea{min-height:46px;height:46px}
+
+/* chart */
+.chartwrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 6px 4px}
+.chartwrap svg{display:block;width:100%;min-width:300px;height:auto}
+.ch-t{fill:var(--muted);font:11px var(--mono)}
+.ch-grid{stroke:var(--line);stroke-width:1}
+.ch-line{stroke:var(--fg);stroke-width:2.2;fill:none;stroke-linejoin:round;stroke-linecap:round}
+.ch-area{fill:var(--fg);opacity:.07}
+.ch-base{stroke:var(--accent);stroke-width:1.6;stroke-dasharray:6 4}
+.ch-decl{stroke:var(--bad);stroke-width:1.6;stroke-dasharray:2 4;stroke-linecap:round}
+.ch-pt{fill:var(--surface);stroke:var(--fg);stroke-width:1.8}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:18px;height:0;border-top:2px solid}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stats div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:4px;min-width:0}
+.stats b{font:700 16px var(--mono)}
+
+/* proposals / progress */
+.prog{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.prop{display:grid;gap:10px;padding-block:14px;border-bottom:1px solid var(--line)}
+.prop:last-child{border-bottom:0}
+.prop h3{font:700 17px var(--display)}
+.ph{display:flex;align-items:center;justify-content:space-between;gap:10px}
+
+/* profile */
+.hello{font:700 26px/1.1 var(--display);letter-spacing:-.02em}
+.kbig{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.kbig b{font:700 44px/1 var(--mono);letter-spacing:-.03em}
+.menu{background:var(--surface);border-block:1px solid var(--line)}
+.mi{display:flex;align-items:center;gap:12px;width:100%;appearance:none;border:0;border-bottom:1px solid var(--line);background:transparent;text-align:left;padding-block:14px;font:600 15px var(--body);cursor:pointer;min-height:52px}
+.mi:last-child{border-bottom:0}
+.mi .ic:first-child{color:var(--accent)}
+.logrow{display:flex;justify-content:space-between;gap:12px;padding-block:10px;border-bottom:1px solid var(--line);font-size:14px}
+.logrow:last-child{border-bottom:0}
+.logrow b{font:700 14px var(--mono);color:var(--good)}
+
+/* toggle */
+.sw{position:relative;width:48px;height:28px;flex:none}
+.sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
+.sw span{position:absolute;inset:0;border-radius:14px;background:var(--line);transition:background .15s}
+.sw span::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .15s}
+.sw input:checked+span{background:var(--accent)}
+.sw input:checked+span::after{transform:translateX(20px)}
+.sw input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.alrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:center;padding-block:14px;border-bottom:1px solid var(--line)}
+.alrow:last-child{border-bottom:0}
+.alrow h3{font:600 16px var(--body)}
+
+/* notifications */
+.nrow{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px;padding-block:12px;border-bottom:1px solid var(--line)}
+.nrow:last-child{border-bottom:0}
+.nrow.un{background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
+.nic{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--surface-2);color:var(--accent)}
+
+#toast{position:absolute;left:50%;bottom:78px;transform:translate(-50%,10px);max-width:calc(100% - 32px);background:var(--fg);color:var(--bg);padding:11px 16px;border-radius:10px;font:600 14px var(--body);opacity:0;pointer-events:none;z-index:5;text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:no-preference){#toast{transition:opacity .2s,transform .2s}}
+</style>
+</head>
+<body>
+<div id="app"><div id="screen"></div><div id="toast" role="status" aria-live="polite"></div></div>
+
+<script>
+/* ================= LÓGICA PURA (sin DOM; se puede probar aparte) ================= */
+// <logic>
+function median(a){const s=[...a].sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2}
+/* Veredicto de una rebaja: compara el precio de hoy con el precio habitual (mediana de lo registrado
+   hace más de 10 días) y revisa si el "antes" anunciado aparece en ese historial. */
+function priceVerdict(history,declaredOld,now){
+  const prior=history.filter(h=>h.d>10).map(h=>h.p);
+  if(history.length<5||prior.length<3)return{k:'none'};
+  const base=median(prior),maxPrior=Math.max(...prior);
+  const real=(base-now)/base,declared=(declaredOld-now)/declaredOld;
+  const inflated=declaredOld>maxPrior*1.03;
+  if(inflated||(real<0.02&&declared>=0.1))return{k:'fake',base,real,declared,inflated};
+  if(real>=0.08)return{k:'real',base,real,declared};
+  return{k:'mild',base,real,declared};
+}
+const SHORTENERS=['bit.ly','tinyurl.com','t.co','goo.gl','is.gd','cutt.ly','ow.ly','rebrand.ly','shorturl.at'];
+function analyzeUrl(raw){
+  raw=String(raw||'').trim();
+  if(raw&&!/^[a-z][a-z0-9+.-]*:\/\//i.test(raw))raw='https://'+raw;
+  let u;try{u=new URL(raw)}catch(e){return{ok:false,flags:['invalid']}}
+  const f=[],h=u.hostname.toLowerCase();
+  if(u.protocol!=='https:')f.push('http');
+  if(u.username||u.password)f.push('creds');
+  if(/^\d{1,3}(\.\d{1,3}){3}$/.test(h))f.push('ip');
+  if(h.split('.').some(p=>p.startsWith('xn--')))f.push('punycode');
+  if(SHORTENERS.includes(h))f.push('short');
+  if(/\.(zip|mov|xyz|top|click|gq|tk|ml|cf)$/.test(h))f.push('tld');
+  return{ok:f.length===0,flags:f,url:u.href};
+}
+function eanCheck(d12){let s=0;for(let i=0;i<12;i++)s+=(+d12[i])*(i%2?3:1);return(10-s%10)%10}
+function isValidEAN(c){
+  c=String(c).replace(/\D/g,'');
+  if(c.length===13)return eanCheck(c.slice(0,12))===+c[12];
+  if(c.length===12)return isValidEAN('0'+c);
+  if(c.length===8){let s=0;for(let i=0;i<7;i++)s+=(+c[i])*(i%2?1:3);return(10-s%10)%10===+c[7]}
+  return false;
+}
+const toEAN13=c=>{c=String(c).replace(/\D/g,'');return c.length===12?'0'+c:c};
+const LV=[0,50,150,400]; // Chispa, Brasa, Fogata, Hoguera (los umbrales los define el producto)
+const levelOf=k=>LV.reduce((a,v,i)=>k>=v?i:a,0);
+const GOAL=500,AUTOHIDE=3,PROPOSE_LVL=2;
+const norm=s=>String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+const matchAlert=(a,o)=>a.on&&!o.hidden&&norm(o.title).includes(norm(a.kw))&&o.now<=a.max;
+const temp=o=>o.temp!==undefined?o.temp:o.up-o.down;
+const heat=t=>t>=100?'hot':t>=0?'warm':'cold'; // caliente, tibia, fría
+// </logic>
+
+/* ================= TEXTOS (i18n) ================= */
+const TX={
+es:{
+'nav.home':'Inicio','nav.scan':'Escáner','nav.post':'Publicar','nav.alerts':'Alertas','nav.me':'Perfil',
+'back':'Atrás','sample':'Datos de ejemplo para el prototipo.','hello':'Hola',
+'cat.super':'Supermercado','cat.tech':'Tecnología','cat.ropa':'Ropa',
+'home.hot':'Calientes','home.new':'Nuevas','home.empty':'Aún no hay ofertas en {cat}. Publica la primera.','home.propose':'Proponer categoría',
+'ago.m':'hace {n} min','ago.h':'hace {n} h','ago.d':'hace {n} d',
+'d.before':'Antes','d.now':'Ahora','d.pos':'Es real','d.neg':'Es falsa','d.temp':'Temperatura','d.votes':'{u} a favor · {d} en contra','d.chart':'Ver historial de precios','d.store':'Abrir tienda','d.report':'Reportar','d.evidence':'Evidencia','d.debate':'Debate','d.write':'Escribe una duda o una respuesta','d.send':'Enviar','d.noComments':'Nadie ha comentado todavía.','d.hidden':'Esta oferta está oculta por reportes de la comunidad hasta que se revise.','d.by':'por {a}','d.disputed':'Disputada',
+'v.real':'Rebaja real','v.fake':'Descuento engañoso','v.mild':'Rebaja menor','v.none':'Sin historial suficiente',
+'v.real.d':'Está {pct}% por debajo del precio habitual de {base}.','v.fake.d':'El precio habitual era {base} y hoy cuesta {now}. Frente al “antes” anunciado de {old}, casi no hay rebaja real.','v.mild.d':'Solo {pct}% por debajo del precio habitual de {base}.','v.none.d':'Hacen falta más reportes de precio para evaluar esta oferta.',
+'ch.title':'Historial de precios','ch.sub':'Últimas 8 semanas','ch.base':'Precio habitual','ch.decl':'“Antes” anunciado','ch.now':'Hoy','ch.week':'{n} sem','ch.empty':'Esta oferta es nueva y todavía no tiene historial de precios.','ch.howto':'El precio habitual es la mediana de lo registrado hace más de 10 días.','ch.line':'Precio registrado',
+'pub.title':'Publicar oferta','pub.locked':'Para publicar ofertas activa el modo Cazador.','pub.activate':'Activar modo Cazador','pub.cat':'Categoría','pub.catNote':'Solo categorías aprobadas. Las nuevas se abren por votación.','pub.product':'Producto','pub.productPh':'Ej. Arroz blanco 5 lb','pub.store':'Tienda','pub.storePh':'Ej. Súper Familiar','pub.old':'Precio anterior','pub.now':'Precio actual','pub.photo':'Foto del producto o del local','pub.photoBtn':'Elegir o tomar foto','pub.url':'O enlace de la tienda en línea','pub.ean':'Código de barras (opcional)','pub.submit':'Publicar oferta','pub.e.fields':'Completa producto, tienda y los dos precios.','pub.e.price':'El precio actual debe ser menor que el anterior.','pub.e.evid':'Agrega una foto o un enlace como evidencia.','pub.e.url':'Ese enlace no parece seguro: {why}.','pub.e.ean':'El código de barras no es válido.','pub.e.photo':'No se pudo leer esa imagen.','pub.ok':'Oferta publicada. +{n} de karma.',
+'u.invalid':'no es un enlace válido','u.http':'no usa HTTPS','u.creds':'trae usuario y clave en la dirección','u.ip':'usa una IP en lugar de un dominio','u.punycode':'el dominio puede imitar a otro','u.short':'es un acortador de enlaces','u.tld':'termina en un dominio de alto riesgo','u.ok':'Sin señales de riesgo en el enlace.',
+'sc.title':'Buscar y escanear','sc.ph':'Producto, tienda o código de barras','sc.go':'Buscar','sc.photo':'Leer código desde una foto','sc.cam':'Escanear con la cámara','sc.samples':'Códigos de ejemplo','sc.nobd':'Este navegador no puede leer códigos desde fotos. Escribe el número.','sc.noread':'No se encontró un código en la foto.','sc.bad':'Ese código no es válido. Revisa el último dígito.','sc.none':'Nadie ha reportado este producto todavía.','sc.report':'Reportar el precio que ves','sc.cheapest':'Más barato','sc.count':'{n} resultado(s)','sc.empty':'Sin resultados.','sc.hint':'Escribe el código y compara los precios reportados por la comunidad. En el teléfono, la cámara lo lee directo.','sc.code':'Código {c}',
+'ct.title':'Nuevas categorías','ct.intro':'Cuando una propuesta llega a {n} votos, se crea sola.','ct.active':'Categorías activas','ct.open':'Propuestas abiertas','ct.votes':'{v} de {n} votos','ct.vote':'Apoyar','ct.voted':'Apoyada','ct.created':'Creada','ct.form':'Proponer una categoría','ct.name':'Nombre','ct.namePh':'Ej. Mascotas','ct.why':'¿Por qué la necesita la comunidad?','ct.send':'Enviar propuesta','ct.lock':'Para proponer necesitas el nivel {lvl} ({pts} puntos). Te faltan {n}. Publicar una oferta suma 15.','ct.role':'Solo el modo Cazador puede proponer categorías.','ct.dup':'Esa categoría ya existe o ya fue propuesta.','ct.name.e':'Escribe un nombre de al menos 3 letras.','ct.sent':'Propuesta enviada.','ct.new':'Nueva categoría creada: {name}.','ct.by':'Propone {a}',
+'me.title':'Perfil','me.karma':'Brasas','me.next':'{n} puntos para {lvl}','me.max':'Nivel máximo alcanzado','me.mode':'Modo de uso','me.r':'Rastreador','me.c':'Cazador','me.rd':'Explora ofertas, vota y recibe alertas.','me.cd':'Además publica ofertas, responde dudas y propone categorías.','me.pub':'Publicadas','me.ver':'Veracidad','me.votes':'Votos dados','me.log':'Últimos movimientos','me.mod':'Moderación y ética','me.cats':'Nuevas categorías','me.settings':'Notificaciones e idioma','me.logEmpty':'Sin movimientos.','me.you':'Tú',
+'lvl.0':'Chispa','lvl.1':'Brasa','lvl.2':'Fogata','lvl.3':'Hoguera','t.hot':'Caliente','t.warm':'Tibia','t.cold':'Fría',
+'k.publish':'Publicaste una oferta','k.vote':'Votaste una oferta','k.comment':'Comentaste','k.propose':'Propusiste una categoría','k.catvote':'Apoyaste una categoría',
+'al.title':'Alertas de precio','al.new':'Nueva alerta','al.product':'Producto','al.productPh':'Ej. Leche en polvo','al.max':'Avisar si baja de','al.save':'Crear alerta','al.test':'Probar ahora','al.none':'Aún no tienes alertas.','al.match':'{n} coincidencia(s) ahora','al.nomatch':'Sin coincidencias. Precio más tonalli hoy: {p}.','al.nodata':'Sin coincidencias todavía.','al.below':'baja de {p}','al.err':'Escribe el producto y un precio mayor que cero.','al.del':'Eliminar alerta','al.tested':'{n} alerta(s) nueva(s). Revisa tus notificaciones.','al.none2':'No hay coincidencias nuevas.','al.on':'Activar alerta',
+'md.title':'Moderación y ética','md.report':'Reportar una publicación','md.which':'Publicación','md.reason':'Motivo','md.spam':'Spam','md.link':'Enlace malicioso','md.illegal':'Promoción ilegal','md.fake':'Precio falso','md.other':'Otro','md.detail':'Detalles (opcional)','md.send':'Enviar reporte','md.mine':'Mis reportes','md.none':'Aún no has enviado reportes.','md.rules':'Reglas de la comunidad','md.r1':'Publica precios reales y que se puedan verificar.','md.r2':'No compartas enlaces acortados ni de origen dudoso.','md.r3':'No promociones productos ilegales ni falsificados.','md.r4':'Respeta a los demás en el debate.','md.check':'Revisar un enlace','md.checkBtn':'Revisar','md.auto':'Con {n} reportes una oferta se oculta hasta que se revise.','md.sent':'Reporte enviado. Gracias por cuidar la comunidad.','md.hidden':'Oculta','md.open':'En revisión','md.pick':'Elige una publicación.',
+'nt.title':'Notificaciones y ajustes','nt.list':'Notificaciones','nt.none':'Sin notificaciones.','nt.read':'Marcar como leídas','nt.lang':'Idioma','nt.langNote':'El náhuat está en construcción. Lo que aún no está traducido se muestra en español.','nt.push':'Avisos push','nt.pushD':'Alertas de precio y respuestas a tus ofertas.','nt.reset':'Restablecer datos de ejemplo','nt.sure':'Toca otra vez para borrar tus cambios','nt.done':'Datos restablecidos.',
+'n.welcome':'Bienvenido. Todo lo que ves son datos de ejemplo.','n.alert':'{title} está en {price} (tu límite: {max}).','n.vote':'Tu oferta “{title}” recibió {n} votos nuevos.','n.reply':'{a} respondió en “{title}”.','n.cat':'Se creó la categoría {name}.','n.hide':'La oferta “{title}” quedó oculta hasta su revisión.'
+},
+en:{
+'nav.home':'Home','nav.scan':'Scanner','nav.post':'Post','nav.alerts':'Alerts','nav.me':'Profile',
+'back':'Back','sample':'Sample data for the prototype.','hello':'Hello',
+'cat.super':'Groceries','cat.tech':'Tech','cat.ropa':'Clothing',
+'home.hot':'Hot','home.new':'New','home.empty':'No deals in {cat} yet. Post the first one.','home.propose':'Suggest a category',
+'ago.m':'{n} min ago','ago.h':'{n} h ago','ago.d':'{n} d ago',
+'d.before':'Before','d.now':'Now','d.pos':'It’s real','d.neg':'It’s fake','d.temp':'Temperature','d.votes':'{u} for · {d} against','d.chart':'See price history','d.store':'Open store','d.report':'Report','d.evidence':'Evidence','d.debate':'Discussion','d.write':'Ask a question or reply','d.send':'Send','d.noComments':'No comments yet.','d.hidden':'This deal is hidden after community reports until it is reviewed.','d.by':'by {a}','d.disputed':'Disputed',
+'v.real':'Real discount','v.fake':'Misleading discount','v.mild':'Small discount','v.none':'Not enough history',
+'v.real.d':'It is {pct}% below the usual price of {base}.','v.fake.d':'The usual price was {base} and today it costs {now}. Compared with the advertised “before” of {old}, there is almost no real discount.','v.mild.d':'Only {pct}% below the usual price of {base}.','v.none.d':'More price reports are needed to judge this deal.',
+'ch.title':'Price history','ch.sub':'Last 8 weeks','ch.base':'Usual price','ch.decl':'Advertised “before”','ch.now':'Today','ch.week':'{n} wk','ch.empty':'This deal is new and has no price history yet.','ch.howto':'The usual price is the median of everything recorded more than 10 days ago.','ch.line':'Recorded price',
+'pub.title':'Post a deal','pub.locked':'Turn on Hunter mode to post deals.','pub.activate':'Turn on Hunter mode','pub.cat':'Category','pub.catNote':'Approved categories only. New ones open by vote.','pub.product':'Product','pub.productPh':'e.g. White rice 5 lb','pub.store':'Store','pub.storePh':'e.g. Family Market','pub.old':'Previous price','pub.now':'Current price','pub.photo':'Photo of the product or the shop','pub.photoBtn':'Choose or take a photo','pub.url':'Or online store link','pub.ean':'Barcode (optional)','pub.submit':'Post deal','pub.e.fields':'Fill in product, store and both prices.','pub.e.price':'The current price must be lower than the previous one.','pub.e.evid':'Add a photo or a link as evidence.','pub.e.url':'That link does not look safe: {why}.','pub.e.ean':'The barcode is not valid.','pub.e.photo':'That image could not be read.','pub.ok':'Deal posted. +{n} karma.',
+'u.invalid':'it is not a valid link','u.http':'it does not use HTTPS','u.creds':'it carries a user and password in the address','u.ip':'it uses an IP instead of a domain','u.punycode':'the domain may imitate another one','u.short':'it is a link shortener','u.tld':'it ends in a high-risk domain','u.ok':'No risk signs in the link.',
+'sc.title':'Search and scan','sc.ph':'Product, store or barcode','sc.go':'Search','sc.photo':'Read a code from a photo','sc.cam':'Scan with the camera','sc.samples':'Sample codes','sc.nobd':'This browser cannot read codes from photos. Type the number.','sc.noread':'No code was found in the photo.','sc.bad':'That code is not valid. Check the last digit.','sc.none':'Nobody has reported this product yet.','sc.report':'Report the price you see','sc.cheapest':'Cheapest','sc.count':'{n} result(s)','sc.empty':'No results.','sc.hint':'Type the code and compare prices reported by the community. On a phone the camera reads it directly.','sc.code':'Code {c}',
+'ct.title':'New categories','ct.intro':'When a proposal reaches {n} votes it is created automatically.','ct.active':'Active categories','ct.open':'Open proposals','ct.votes':'{v} of {n} votes','ct.vote':'Support','ct.voted':'Supported','ct.created':'Created','ct.form':'Suggest a category','ct.name':'Name','ct.namePh':'e.g. Pets','ct.why':'Why does the community need it?','ct.send':'Send proposal','ct.lock':'To suggest one you need level {lvl} ({pts} points). You are {n} short. Posting a deal gives 15.','ct.role':'Only Hunter mode can suggest categories.','ct.dup':'That category already exists or was already proposed.','ct.name.e':'Enter a name of at least 3 letters.','ct.sent':'Proposal sent.','ct.new':'New category created: {name}.','ct.by':'Suggested by {a}',
+'me.title':'Profile','me.karma':'Embers','me.next':'{n} points to {lvl}','me.max':'Top level reached','me.mode':'How you use it','me.r':'Tracker','me.c':'Hunter','me.rd':'Browse deals, vote and get alerts.','me.cd':'Also post deals, answer questions and suggest categories.','me.pub':'Posted','me.ver':'Accuracy','me.votes':'Votes cast','me.log':'Recent activity','me.mod':'Moderation and ethics','me.cats':'New categories','me.settings':'Notifications and language','me.logEmpty':'No activity.','me.you':'You',
+'lvl.0':'Chispa','lvl.1':'Brasa','lvl.2':'Fogata','lvl.3':'Hoguera','t.hot':'Hot','t.warm':'Warm','t.cold':'Cold',
+'k.publish':'You posted a deal','k.vote':'You voted on a deal','k.comment':'You commented','k.propose':'You suggested a category','k.catvote':'You supported a category',
+'al.title':'Price alerts','al.new':'New alert','al.product':'Product','al.productPh':'e.g. Powdered milk','al.max':'Notify me if it drops below','al.save':'Create alert','al.test':'Test now','al.none':'You have no alerts yet.','al.match':'{n} match(es) now','al.nomatch':'No matches. Lowest price today: {p}.','al.nodata':'No matches yet.','al.below':'below {p}','al.err':'Enter the product and a price above zero.','al.del':'Delete alert','al.tested':'{n} new alert(s). Check your notifications.','al.none2':'No new matches.','al.on':'Turn alert on',
+'md.title':'Moderation and ethics','md.report':'Report a post','md.which':'Post','md.reason':'Reason','md.spam':'Spam','md.link':'Malicious link','md.illegal':'Illegal promotion','md.fake':'Fake price','md.other':'Other','md.detail':'Details (optional)','md.send':'Send report','md.mine':'My reports','md.none':'You have not sent any reports.','md.rules':'Community rules','md.r1':'Post real prices that can be verified.','md.r2':'Do not share shortened or doubtful links.','md.r3':'Do not promote illegal or counterfeit products.','md.r4':'Be respectful in discussions.','md.check':'Check a link','md.checkBtn':'Check','md.auto':'With {n} reports a deal is hidden until it is reviewed.','md.sent':'Report sent. Thanks for looking after the community.','md.hidden':'Hidden','md.open':'Under review','md.pick':'Choose a post.',
+'nt.title':'Notifications and settings','nt.list':'Notifications','nt.none':'No notifications.','nt.read':'Mark all as read','nt.lang':'Language','nt.langNote':'Náhuat is under construction. Anything not translated yet shows in Spanish.','nt.push':'Push notices','nt.pushD':'Price alerts and replies to your deals.','nt.reset':'Reset sample data','nt.sure':'Tap again to erase your changes','nt.done':'Data reset.',
+'n.welcome':'Welcome. Everything you see is sample data.','n.alert':'{title} is at {price} (your limit: {max}).','n.vote':'Your deal “{title}” got {n} new votes.','n.reply':'{a} replied on “{title}”.','n.cat':'The category {name} was created.','n.hide':'The deal “{title}” is hidden until it is reviewed.'
+},
+pt:{
+'nav.home':'Início','nav.scan':'Scanner','nav.post':'Publicar','nav.alerts':'Alertas','nav.me':'Perfil',
+'back':'Voltar','sample':'Dados de exemplo do protótipo.','hello':'Olá',
+'cat.super':'Supermercado','cat.tech':'Tecnologia','cat.ropa':'Roupas',
+'home.hot':'Quentes','home.new':'Novas','home.empty':'Ainda não há ofertas em {cat}. Publique a primeira.','home.propose':'Propor categoria',
+'ago.m':'há {n} min','ago.h':'há {n} h','ago.d':'há {n} d',
+'d.before':'Antes','d.now':'Agora','d.pos':'É real','d.neg':'É falsa','d.temp':'Temperatura','d.votes':'{u} a favor · {d} contra','d.chart':'Ver histórico de preços','d.store':'Abrir loja','d.report':'Denunciar','d.evidence':'Evidência','d.debate':'Debate','d.write':'Escreva uma dúvida ou resposta','d.send':'Enviar','d.noComments':'Ninguém comentou ainda.','d.hidden':'Esta oferta está oculta por denúncias da comunidade até ser revisada.','d.by':'por {a}','d.disputed':'Contestada',
+'v.real':'Desconto real','v.fake':'Desconto enganoso','v.mild':'Desconto pequeno','v.none':'Histórico insuficiente',
+'v.real.d':'Está {pct}% abaixo do preço habitual de {base}.','v.fake.d':'O preço habitual era {base} e hoje custa {now}. Em relação ao “antes” anunciado de {old}, quase não há desconto real.','v.mild.d':'Apenas {pct}% abaixo do preço habitual de {base}.','v.none.d':'São necessários mais registros de preço para avaliar esta oferta.',
+'ch.title':'Histórico de preços','ch.sub':'Últimas 8 semanas','ch.base':'Preço habitual','ch.decl':'“Antes” anunciado','ch.now':'Hoje','ch.week':'{n} sem','ch.empty':'Esta oferta é nova e ainda não tem histórico de preços.','ch.howto':'O preço habitual é a mediana do que foi registrado há mais de 10 dias.','ch.line':'Preço registrado',
+'pub.title':'Publicar oferta','pub.locked':'Para publicar ofertas ative o modo Caçador.','pub.activate':'Ativar modo Caçador','pub.cat':'Categoria','pub.catNote':'Somente categorias aprovadas. As novas abrem por votação.','pub.product':'Produto','pub.productPh':'Ex. Arroz branco 5 lb','pub.store':'Loja','pub.storePh':'Ex. Super Família','pub.old':'Preço anterior','pub.now':'Preço atual','pub.photo':'Foto do produto ou da loja','pub.photoBtn':'Escolher ou tirar foto','pub.url':'Ou link da loja online','pub.ean':'Código de barras (opcional)','pub.submit':'Publicar oferta','pub.e.fields':'Preencha produto, loja e os dois preços.','pub.e.price':'O preço atual deve ser menor que o anterior.','pub.e.evid':'Adicione uma foto ou um link como evidência.','pub.e.url':'Esse link não parece seguro: {why}.','pub.e.ean':'O código de barras não é válido.','pub.e.photo':'Não foi possível ler essa imagem.','pub.ok':'Oferta publicada. +{n} de karma.',
+'u.invalid':'não é um link válido','u.http':'não usa HTTPS','u.creds':'traz usuário e senha no endereço','u.ip':'usa um IP em vez de um domínio','u.punycode':'o domínio pode imitar outro','u.short':'é um encurtador de links','u.tld':'termina em um domínio de alto risco','u.ok':'Nenhum sinal de risco no link.',
+'sc.title':'Buscar e escanear','sc.ph':'Produto, loja ou código de barras','sc.go':'Buscar','sc.photo':'Ler código de uma foto','sc.cam':'Escanear com a câmera','sc.samples':'Códigos de exemplo','sc.nobd':'Este navegador não lê códigos de fotos. Digite o número.','sc.noread':'Nenhum código foi encontrado na foto.','sc.bad':'Esse código não é válido. Confira o último dígito.','sc.none':'Ninguém reportou este produto ainda.','sc.report':'Reportar o preço que você vê','sc.cheapest':'Mais barato','sc.count':'{n} resultado(s)','sc.empty':'Sem resultados.','sc.hint':'Digite o código e compare os preços reportados pela comunidade. No celular, a câmera lê direto.','sc.code':'Código {c}',
+'ct.title':'Novas categorias','ct.intro':'Quando uma proposta chega a {n} votos, ela é criada automaticamente.','ct.active':'Categorias ativas','ct.open':'Propostas abertas','ct.votes':'{v} de {n} votos','ct.vote':'Apoiar','ct.voted':'Apoiada','ct.created':'Criada','ct.form':'Propor uma categoria','ct.name':'Nome','ct.namePh':'Ex. Pets','ct.why':'Por que a comunidade precisa dela?','ct.send':'Enviar proposta','ct.lock':'Para propor você precisa do nível {lvl} ({pts} pontos). Faltam {n}. Publicar uma oferta soma 15.','ct.role':'Somente o modo Caçador pode propor categorias.','ct.dup':'Essa categoria já existe ou já foi proposta.','ct.name.e':'Digite um nome com pelo menos 3 letras.','ct.sent':'Proposta enviada.','ct.new':'Nova categoria criada: {name}.','ct.by':'Proposta de {a}',
+'me.title':'Perfil','me.karma':'Brasas','me.next':'{n} pontos para {lvl}','me.max':'Nível máximo alcançado','me.mode':'Modo de uso','me.r':'Rastreador','me.c':'Caçador','me.rd':'Explore ofertas, vote e receba alertas.','me.cd':'Também publica ofertas, responde dúvidas e propõe categorias.','me.pub':'Publicadas','me.ver':'Veracidade','me.votes':'Votos dados','me.log':'Últimos movimentos','me.mod':'Moderação e ética','me.cats':'Novas categorias','me.settings':'Notificações e idioma','me.logEmpty':'Sem movimentos.','me.you':'Você',
+'lvl.0':'Chispa','lvl.1':'Brasa','lvl.2':'Fogata','lvl.3':'Hoguera','t.hot':'Quente','t.warm':'Morna','t.cold':'Fria',
+'k.publish':'Você publicou uma oferta','k.vote':'Você votou em uma oferta','k.comment':'Você comentou','k.propose':'Você propôs uma categoria','k.catvote':'Você apoiou uma categoria',
+'al.title':'Alertas de preço','al.new':'Novo alerta','al.product':'Produto','al.productPh':'Ex. Leite em pó','al.max':'Avisar se baixar de','al.save':'Criar alerta','al.test':'Testar agora','al.none':'Você ainda não tem alertas.','al.match':'{n} coincidência(s) agora','al.nomatch':'Sem coincidências. Menor preço hoje: {p}.','al.nodata':'Sem coincidências ainda.','al.below':'abaixo de {p}','al.err':'Digite o produto e um preço maior que zero.','al.del':'Excluir alerta','al.tested':'{n} alerta(s) novo(s). Veja suas notificações.','al.none2':'Não há coincidências novas.','al.on':'Ativar alerta',
+'md.title':'Moderação e ética','md.report':'Denunciar uma publicação','md.which':'Publicação','md.reason':'Motivo','md.spam':'Spam','md.link':'Link malicioso','md.illegal':'Promoção ilegal','md.fake':'Preço falso','md.other':'Outro','md.detail':'Detalhes (opcional)','md.send':'Enviar denúncia','md.mine':'Minhas denúncias','md.none':'Você ainda não enviou denúncias.','md.rules':'Regras da comunidade','md.r1':'Publique preços reais e verificáveis.','md.r2':'Não compartilhe links encurtados ou de origem duvidosa.','md.r3':'Não promova produtos ilegais ou falsificados.','md.r4':'Respeite os outros no debate.','md.check':'Verificar um link','md.checkBtn':'Verificar','md.auto':'Com {n} denúncias uma oferta fica oculta até ser revisada.','md.sent':'Denúncia enviada. Obrigado por cuidar da comunidade.','md.hidden':'Oculta','md.open':'Em revisão','md.pick':'Escolha uma publicação.',
+'nt.title':'Notificações e ajustes','nt.list':'Notificações','nt.none':'Sem notificações.','nt.read':'Marcar como lidas','nt.lang':'Idioma','nt.langNote':'O náhuat está em construção. O que ainda não foi traduzido aparece em espanhol.','nt.push':'Avisos push','nt.pushD':'Alertas de preço e respostas às suas ofertas.','nt.reset':'Restaurar dados de exemplo','nt.sure':'Toque de novo para apagar suas alterações','nt.done':'Dados restaurados.',
+'n.welcome':'Bem-vindo. Tudo o que você vê são dados de exemplo.','n.alert':'{title} está em {price} (seu limite: {max}).','n.vote':'Sua oferta “{title}” recebeu {n} votos novos.','n.reply':'{a} respondeu em “{title}”.','n.cat':'A categoria {name} foi criada.','n.hide':'A oferta “{title}” ficou oculta até ser revisada.'
+},
+/* Náhuat (nawat): solo lo confirmado. El resto cae a español hasta validarlo con hablantes. */
+nah:{'hello':'Niltze'}
+};
+
+Object.assign(TX.es,{'au.login':'Iniciar sesión','au.register':'Crear cuenta','au.email':'Correo electrónico','au.handle':'Nombre de usuario','au.handle.h':'De 3 a 20 caracteres: letras, números, punto o guion bajo. Será público.','au.pass':'Contraseña','au.pass.new':'Nueva contraseña','au.pass.h':'Mínimo 15 caracteres. Una frase larga es más segura que una palabra con símbolos.','au.forgot':'Olvidé mi contraseña','au.have':'Ya tengo cuenta','au.new':'Crear una cuenta nueva','au.back':'Volver','au.send':'Enviar enlace','au.sent':'Si el correo existe, te enviamos un mensaje. Revisa tu bandeja.','au.reg.ok':'Cuenta creada. Te enviamos un correo para confirmarla; ábrelo y luego inicia sesión.','au.verified':'Correo confirmado. Ya puedes iniciar sesión.','au.reset.t':'Elige una contraseña nueva','au.reset.go':'Cambiar contraseña','au.reset.ok':'Contraseña cambiada. Inicia sesión con la nueva.','au.unverified':'Confirma tu correo para votar, publicar y comentar.','au.resend':'Reenviar correo','au.logout':'Cerrar sesión','au.tag':'Ofertas con temperatura real','au.err.fields':'Escribe tu correo y tu contraseña.','au.err.email':'Escribe un correo válido.','au.err.handle':'El usuario debe tener de 3 a 20 letras, números, punto o guion bajo.','au.err.pass':'La contraseña debe tener al menos 15 caracteres.',
+'e.net':'No se pudo conectar con el servidor. Revisa tu conexión.','e.rate':'Demasiados intentos. Espera {n} s e inténtalo de nuevo.','e.generic':'Algo salió mal. Inténtalo de nuevo.','e.session':'Tu sesión terminó. Inicia sesión otra vez.','e.invalid_credentials':'Correo o contraseña incorrectos.','e.email_not_verified':'Primero confirma tu correo.','e.account_too_new':'Tu cuenta es muy reciente para esto. Inténtalo más tarde.','e.account_suspended':'Tu cuenta está suspendida.','e.own_offer':'No puedes votar tu propia oferta.','e.level_too_low':'Aún no tienes el nivel necesario.','e.mode_required':'Activa el modo Cazador en tu perfil.','e.weak_password':'Esa contraseña es muy débil. Usa una frase larga.','e.breached_password':'Esa contraseña apareció en filtraciones. Elige otra.','e.same_password':'La contraseña nueva debe ser distinta.','e.invalid_token':'El enlace venció o ya se usó. Pide uno nuevo.','e.validation_error':'Revisa los datos: alguno no es válido.','e.evidence_required':'Agrega un enlace o una foto como evidencia.','e.unsafe_link':'Ese enlace no es seguro.','e.https_required':'El enlace debe ser https.','e.invalid_prices':'El precio actual debe ser menor que el anterior.','e.invalid_ean':'El código de barras no es válido.','e.invalid_image':'La foto no es válida.','e.duplicate_offer':'Esa oferta ya fue publicada.','e.already_voted':'Ya apoyaste esta propuesta.','e.category_exists':'Esa categoría ya existe o ya fue propuesta.','e.too_many_open':'Tienes demasiadas propuestas abiertas.','e.alert_limit':'Llegaste al máximo de alertas.','e.invalid_keyword':'La palabra clave es muy corta.','e.already_reported':'Ya reportaste esta oferta.','e.payload_too_large':'La foto es muy grande.','e.registration_closed':'El registro está cerrado por ahora.','e.server_busy':'El servidor está ocupado. Reintenta en unos segundos.'});
+Object.assign(TX.en,{'au.login':'Log in','au.register':'Create account','au.email':'Email','au.handle':'Username','au.handle.h':'3 to 20 characters: letters, numbers, dot or underscore. It will be public.','au.pass':'Password','au.pass.new':'New password','au.pass.h':'At least 15 characters. A long phrase is safer than a short word with symbols.','au.forgot':'Forgot my password','au.have':'I already have an account','au.new':'Create a new account','au.back':'Back','au.send':'Send link','au.sent':'If the email exists, we sent you a message. Check your inbox.','au.reg.ok':'Account created. We sent you an email to confirm it; open it, then log in.','au.verified':'Email confirmed. You can log in now.','au.reset.t':'Choose a new password','au.reset.go':'Change password','au.reset.ok':'Password changed. Log in with the new one.','au.unverified':'Confirm your email to vote, post and comment.','au.resend':'Resend email','au.logout':'Log out','au.tag':'Deals with real temperature','au.err.fields':'Enter your email and password.','au.err.email':'Enter a valid email.','au.err.handle':'Username must be 3 to 20 letters, numbers, dots or underscores.','au.err.pass':'Password must be at least 15 characters.',
+'e.net':'Could not reach the server. Check your connection.','e.rate':'Too many attempts. Wait {n} s and try again.','e.generic':'Something went wrong. Try again.','e.session':'Your session ended. Log in again.','e.invalid_credentials':'Wrong email or password.','e.email_not_verified':'Confirm your email first.','e.account_too_new':'Your account is too new for this. Try later.','e.account_suspended':'Your account is suspended.','e.own_offer':'You cannot vote on your own deal.','e.level_too_low':'You have not reached the required level yet.','e.mode_required':'Turn on Hunter mode in your profile.','e.weak_password':'That password is too weak. Use a long phrase.','e.breached_password':'That password appeared in data leaks. Pick another.','e.same_password':'The new password must be different.','e.invalid_token':'The link expired or was already used. Ask for a new one.','e.validation_error':'Check the data: something is not valid.','e.evidence_required':'Add a link or a photo as evidence.','e.unsafe_link':'That link is not safe.','e.https_required':'The link must be https.','e.invalid_prices':'The current price must be lower than the old one.','e.invalid_ean':'The barcode is not valid.','e.invalid_image':'The photo is not valid.','e.duplicate_offer':'That deal was already posted.','e.already_voted':'You already backed this proposal.','e.category_exists':'That category already exists or was proposed.','e.too_many_open':'You have too many open proposals.','e.alert_limit':'You reached the alert limit.','e.invalid_keyword':'The keyword is too short.','e.already_reported':'You already reported this deal.','e.payload_too_large':'The photo is too large.','e.registration_closed':'Sign-up is closed for now.','e.server_busy':'The server is busy. Retry in a few seconds.'});
+Object.assign(TX.pt,{'au.login':'Entrar','au.register':'Criar conta','au.email':'E-mail','au.handle':'Nome de usuário','au.handle.h':'De 3 a 20 caracteres: letras, números, ponto ou sublinhado. Será público.','au.pass':'Senha','au.pass.new':'Nova senha','au.pass.h':'Mínimo de 15 caracteres. Uma frase longa é mais segura que uma palavra curta com símbolos.','au.forgot':'Esqueci minha senha','au.have':'Já tenho conta','au.new':'Criar uma conta nova','au.back':'Voltar','au.send':'Enviar link','au.sent':'Se o e-mail existir, enviamos uma mensagem. Confira sua caixa de entrada.','au.reg.ok':'Conta criada. Enviamos um e-mail para confirmar; abra-o e depois entre.','au.verified':'E-mail confirmado. Já pode entrar.','au.reset.t':'Escolha uma nova senha','au.reset.go':'Alterar senha','au.reset.ok':'Senha alterada. Entre com a nova.','au.unverified':'Confirme seu e-mail para votar, publicar e comentar.','au.resend':'Reenviar e-mail','au.logout':'Sair','au.tag':'Ofertas com temperatura real','au.err.fields':'Digite seu e-mail e sua senha.','au.err.email':'Digite um e-mail válido.','au.err.handle':'O usuário deve ter de 3 a 20 letras, números, pontos ou sublinhados.','au.err.pass':'A senha deve ter pelo menos 15 caracteres.',
+'e.net':'Não foi possível conectar ao servidor. Verifique sua conexão.','e.rate':'Muitas tentativas. Aguarde {n} s e tente de novo.','e.generic':'Algo deu errado. Tente de novo.','e.session':'Sua sessão terminou. Entre novamente.','e.invalid_credentials':'E-mail ou senha incorretos.','e.email_not_verified':'Confirme seu e-mail primeiro.','e.account_too_new':'Sua conta é muito recente para isso. Tente mais tarde.','e.account_suspended':'Sua conta está suspensa.','e.own_offer':'Você não pode votar na sua própria oferta.','e.level_too_low':'Você ainda não tem o nível necessário.','e.mode_required':'Ative o modo Caçador no seu perfil.','e.weak_password':'Essa senha é muito fraca. Use uma frase longa.','e.breached_password':'Essa senha apareceu em vazamentos. Escolha outra.','e.same_password':'A nova senha deve ser diferente.','e.invalid_token':'O link expirou ou já foi usado. Peça um novo.','e.validation_error':'Verifique os dados: algo não é válido.','e.evidence_required':'Adicione um link ou uma foto como prova.','e.unsafe_link':'Esse link não é seguro.','e.https_required':'O link deve ser https.','e.invalid_prices':'O preço atual deve ser menor que o anterior.','e.invalid_ean':'O código de barras não é válido.','e.invalid_image':'A foto não é válida.','e.duplicate_offer':'Essa oferta já foi publicada.','e.already_voted':'Você já apoiou esta proposta.','e.category_exists':'Essa categoria já existe ou já foi proposta.','e.too_many_open':'Você tem propostas abertas demais.','e.alert_limit':'Você atingiu o máximo de alertas.','e.invalid_keyword':'A palavra-chave é muito curta.','e.already_reported':'Você já denunciou esta oferta.','e.payload_too_large':'A foto é muito grande.','e.registration_closed':'O cadastro está fechado por enquanto.','e.server_busy':'O servidor está ocupado. Tente em alguns segundos.'});
+const LANGS=[['es','Español'],['en','English'],['pt','Português'],['nah','Náhuat']];
+let S=null;
+const t=(k,p)=>{let s=(TX[S.lang]&&TX[S.lang][k])??TX.es[k]??k;if(p)for(const x in p)s=s.split('{'+x+'}').join(p[x]);return s};
+
+/* ================= ICONOS ================= */
+const IC={
+home:'<path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.8V20h13V9.8"/><path d="M10 20v-5.5h4V20"/>',
+scan:'<path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><path d="M8 9v6M11 9v6M14 9v6M16.5 9v6"/>',
+plus:'<path d="M12 5v14M5 12h14"/>',
+bell:'<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
+user:'<circle cx="12" cy="8.5" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/>',
+flame:'<path d="M12 3c.6 3 4.8 5 4.8 9.6A4.8 4.8 0 0 1 12 17.4a4.8 4.8 0 0 1-4.8-4.8c0-1.9.9-3 1.9-4 .2 1.2.8 1.8 1.6 2C10.3 7.4 11 5 12 3z"/>',
+snow:'<path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/><path d="M9.5 4.5 12 6.5l2.5-2M9.5 19.5 12 17.5l2.5 2"/>',
+back:'<path d="M15 5l-7 7 7 7"/>',
+flag:'<path d="M6 21V4M6 5h11l-2 4 2 4H6"/>',
+chart:'<path d="M4 4v16h16"/><path d="M7 15l4-5 3 3 5-7"/>',
+check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+shield:'<path d="M12 3 5 6v5.5c0 4.3 3 7.6 7 9.5 4-1.9 7-5.2 7-9.5V6z"/><path d="M9 12l2.2 2.2L15 10"/>',
+globe:'<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.5 3.5 8.5s-1 5.9-3.5 8.5c-2.5-2.6-3.5-5.5-3.5-8.5s1-5.9 3.5-8.5z"/>',
+cart:'<path d="M3 4h2l2.2 10.2a1 1 0 0 0 1 .8h8.6a1 1 0 0 0 1-.76L19.5 8H6.2"/><circle cx="9" cy="19" r="1.4"/><circle cx="17" cy="19" r="1.4"/>',
+phone:'<rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M11 18.5h2"/>',
+shirt:'<path d="M8 3 3 6l2 4 2.2-1V20h9.6V9L19 10l2-4-5-3a4 4 0 0 1-8 0z"/>',
+tag:'<path d="M3.5 12.5V4.5h8l9 9-8 8z"/><circle cx="8" cy="9" r="1.3"/>',
+up:'<path d="M12 19V6M6 11l6-6 6 6"/>',
+down:'<path d="M12 5v13M6 13l6 6 6-6"/>',
+link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+camera:'<path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+trash:'<path d="M5 7h14M9 7V4.5h6V7M7 7l1 13h8l1-13"/>',
+therm:'<path d="M10 14.5V5a2 2 0 0 1 4 0v9.5a4 4 0 1 1-4 0z"/><path d="M12 9v7"/>',
+send:'<path d="M4 12 20 4l-4 16-4.5-6.5z"/>',
+chev:'<path d="M9 5l7 7-7 7"/>',
+msg:'<path d="M4 5h16v11H9l-5 4z"/>'
+};
+const logo=(h=24)=>`<svg class="logo" width="${(h*384/440).toFixed(1)}" height="${h}" viewBox="64 64 384 440" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="140" x2="0" y2="392" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F5A524"/><stop offset="1" stop-color="#E8501F"/></linearGradient></defs><rect x="212" y="140" width="88" height="250" rx="44" fill="url(#lg)"/><circle cx="256" cy="392" r="74" fill="#E8501F"/><rect x="88" y="96" width="336" height="88" rx="44" fill="currentColor"/></svg>`;
+const ico=(n,s=22)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||''}</svg>`;
+
+/* ================= DATOS ================= */
+const KEY='tonalli.prototipo.v1';
+const EXTRA=['var(--c-x1)','var(--c-x2)','var(--c-x3)','var(--c-x4)'];
+const uid=()=>Math.random().toString(36).slice(2,9);
+const fmt=n=>'$'+Number(n).toFixed(2);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ================= CONEXIÓN CON EL SERVIDOR (API) =================
+   Si la dirección de la API está vacía, la app corre en MODO DEMOSTRACIÓN (datos locales, sin cuentas).
+   Si tiene dirección, corre en MODO SERVIDOR: cuentas, ofertas, votos, comentarios y alertas viven en el servidor.
+   Dirección: <meta name="tonalli-api" content="https://api.tu-dominio.com"> (o window.TONALLI_API antes de este script). */
+const API_RAW=String(window.TONALLI_API||((document.querySelector('meta[name="tonalli-api"]')||{}).content)||'').trim().replace(/\/+$/,'');
+/* Solo HTTPS (o localhost para desarrollo): jamás se envían contraseñas ni tokens por HTTP a un servidor remoto. */
+const API=/^https:\/\/[^\s/]+$/i.test(API_RAW)||/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(API_RAW)?API_RAW:'';
+if(API_RAW&&!API)console.warn('Tonalli: la dirección de la API debe ser HTTPS. Se usa el modo demostración.');
+const SRV=!!API;
+const RTK='tonalli.rt';
+/* Token de acceso solo en memoria; el de renovación en localStorage (en la app Android el WebView es privado a la app). */
+const A={at:null,rt:(()=>{try{return localStorage.getItem(RTK)}catch(e){return null}})(),flight:null};
+function setTokens(j){A.at=j.access_token;A.rt=j.refresh_token;try{localStorage.setItem(RTK,A.rt)}catch(e){}}
+function clearTokens(){A.at=A.rt=null;try{localStorage.removeItem(RTK)}catch(e){}}
+/* Renovar la sesión: una sola petición a la vez (el token de renovación es de un solo uso y rota en cada uso). */
+function refreshTok(){
+  if(!A.rt)return Promise.reject({status:401,code:'session'});
+  if(!A.flight){
+    const once=()=>fetch(API+'/v1/auth/refresh',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({refresh_token:A.rt}),cache:'no-store',credentials:'omit'});
+    A.flight=(async()=>{
+      let r;try{r=await once()}catch(e){throw{status:0,code:'network'}}
+      let j=null;try{j=await r.json()}catch(e){}
+      if(r.status===401&&j&&j.error&&j.error.code==='refresh_retry'){await new Promise(z=>setTimeout(z,800));try{r=await once();j=await r.json()}catch(e){throw{status:0,code:'network'}}}
+      if(!r.ok)throw{status:r.status,code:(j&&j.error&&j.error.code)||'session'};
+      setTokens(j);
+    })().finally(()=>{A.flight=null});
+  }
+  return A.flight;
+}
+async function api(method,path,body,o={}){
+  const go=()=>fetch(API+'/v1'+path,{method,headers:{...(body!==undefined?{'Content-Type':'application/json'}:{}),...(A.at&&!o.anon?{Authorization:'Bearer '+A.at}:{})},body:body!==undefined?JSON.stringify(body):undefined,cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'});
+  let r;try{r=await go()}catch(e){throw{status:0,code:'network'}}
+  if(r.status===401&&!o.anon&&A.rt){
+    try{await refreshTok()}catch(e){if(e.status!==0)await dropSession();throw e.status===0?e:{status:401,code:'session'}}
+    try{r=await go()}catch(e){throw{status:0,code:'network'}}
+  }
+  if(r.status===204)return null;
+  let j=null;try{j=await r.json()}catch(e){}
+  if(!r.ok){const er=(j&&j.error)||{};throw{status:r.status,code:er.code||'error',retry:+r.headers.get('Retry-After')||0}}
+  return j;
+}
+/* Foto: requiere sesión, así que se pide con fetch y se muestra como objeto local (blob). */
+async function apiBlob(path){
+  const go=()=>fetch(API+'/v1'+path,{headers:{Authorization:'Bearer '+A.at},cache:'no-store',credentials:'omit'});
+  let r=await go();
+  if(r.status===401&&A.rt){await refreshTok();r=await go()}
+  if(!r.ok)throw{status:r.status};
+  return URL.createObjectURL(await r.blob());
+}
+const BASEC={super:{icon:'cart',color:'var(--c-super)'},tech:{icon:'phone',color:'var(--c-tech)'},ropa:{icon:'shirt',color:'var(--c-ropa)'}};
+function srvState(){
+  let p={};try{p=JSON.parse(localStorage.getItem(KEY+'.srv')||'{}')}catch(e){}
+  return{v:1,lang:['es','en','pt','nah'].includes(p.lang)?p.lang:'es',role:'rastreador',push:p.push!==false,me:null,user:{karma:0,voted:{},catVotes:{}},cats:[],offers:[],proposals:[],alerts:[],notifs:[],reports:[],karmaLog:[]};
+}
+/* ---- traducción servidor → forma que usa la app (precios en dólares, autor 'me', etc.) ---- */
+function mapOffer(d,o){
+  o=o||{};
+  Object.assign(o,{id:d.id,cat:d.category_id,title:d.title,store:d.store,now:d.price_now_cents/100,old:d.price_old_cents/100,ean:d.ean||null,url:d.link_url||null,hasPhoto:!!d.has_photo,author:d.mine?'me':(d.author||'—'),ts:Date.parse(d.created_at),up:d.votes_up,down:d.votes_down,temp:d.temperature,sv:d.verdict||{kind:'none'},hidden:!!d.status&&d.status!=='visible'});
+  o.history=o.history||[];o.comments=o.comments||[];o.reports=o.reports||0;o.photo=o.photo||null;
+  if(d.my_vote)S.user.voted[d.id]=d.my_vote;else delete S.user.voted[d.id];
+  return o;
+}
+function upsert(d){let o=byId(d.id);if(o)mapOffer(d,o);else{o=mapOffer(d);S.offers.push(o)}return o}
+function verdictOf(o){
+  if(o.sv){const s=o.sv;return{k:s.kind,base:(s.base_cents||0)/100,real:(s.real_pct||0)/100,declared:(s.declared_pct||0)/100,inflated:!!s.inflated}}
+  return priceVerdict(o.history,o.old,o.now);
+}
+function applyMe(me){S.me=me;S.role=me.mode;if(['es','en','pt','nah'].includes(me.lang))S.lang=me.lang;S.user.karma=me.karma}
+const mapCat=(c,i)=>BASEC[c.id]?{id:c.id,base:true,...BASEC[c.id]}:{id:c.id,name:c.name,icon:'tag',color:EXTRA[i%EXTRA.length],base:false};
+const mapAlert=a=>({id:a.id,kw:a.keyword,max:a.max_price_cents/100,on:a.active,seen:[]});
+function mapNotif(n){
+  const p=n.params||{},ts=Date.parse(n.created_at),base={id:n.id,ts,read:!!n.read};
+  if(n.kind==='alert'){const price=(p.price_cents||0)/100,a=S.alerts.find(x=>x.on&&norm(p.title||'').includes(norm(x.kw)));return{...base,k:'n.alert',p:{title:p.title||'',price:fmt(price),max:fmt(a?a.max:price)}}}
+  if(n.kind==='reply')return{...base,k:'n.reply',p:{a:p.by||'—',title:p.title||''}};
+  if(n.kind==='hidden')return{...base,k:'n.hide',p:{title:p.title||''}};
+  if(n.kind==='category')return{...base,k:'n.cat',p:{name:p.name||''}};
+  return null;
+}
+async function loadOffers(){
+  const all=[];let cur=null;
+  for(let i=0;i<4;i++){const r=await api('GET','/offers?sort=new&limit=50'+(cur?'&cursor='+encodeURIComponent(cur):''));all.push(...r.items);cur=r.next_cursor;if(!cur)break}
+  const keep=new Map(S.offers.map(o=>[o.id,o]));
+  S.user.voted={};
+  S.offers=all.map(d=>mapOffer(d,keep.get(d.id)));
+}
+const loadAlerts=async()=>{S.alerts=(await api('GET','/alerts')).items.map(mapAlert)};
+async function loadNotifs(){S.notifs=(await api('GET','/notifications?limit=40')).items.map(mapNotif).filter(Boolean)}
+async function loadProps(){
+  const r=await api('GET','/category-proposals');
+  S.user.catVotes={};
+  S.proposals=r.items.map(p=>{if(p.voted)S.user.catVotes[p.id]=1;return{id:p.id,name:p.name,why:p.why||'—',by:S.me&&p.proposer===S.me.handle?'me':(p.proposer||'—'),votes:p.votes,created:false}});
+}
+async function loadCats(){const ord=['super','tech','ropa'],rk=c=>ord.includes(c.id)?ord.indexOf(c.id):9;S.cats=(await api('GET','/categories')).items.sort((x,y)=>rk(x)-rk(y)).map(mapCat)}
+const refreshMe=async()=>{try{applyMe(await api('GET','/me'))}catch(e){}};
+async function hydrate(){
+  applyMe(await api('GET','/me'));
+  await loadCats();await loadOffers();await loadAlerts();
+  await Promise.all([loadProps(),loadNotifs()]);
+  if(!S.cats.some(c=>c.id===UI.cat))UI.cat=(S.cats[0]||{}).id;
+}
+async function dropSession(){
+  clearTokens();Object.assign(S,srvState(),{lang:S.lang});UI.auth='login';UI.scan=null;R.name='auth';R.tab='home';R.stack=[];R.id=null;render(true);
+}
+async function loadDetail(id){
+  const o=byId(id);if(!o)return;
+  try{
+    const [d,h,c]=await Promise.all([api('GET','/offers/'+id),api('GET','/offers/'+id+'/price-history'),api('GET','/offers/'+id+'/comments?limit=50')]);
+    mapOffer(d,o);
+    o.history=h.points.map(p=>({d:p.days_ago,p:p.price_cents/100}));
+    o.comments=c.items.map(x=>({a:x.author||'—',txt:x.body,ts:Date.parse(x.created_at),me:!!S.me&&x.author===S.me.handle})).sort((a,b)=>a.ts-b.ts);
+    if((R.name==='detail'||R.name==='chart')&&R.id===id)render();
+    if(o.hasPhoto&&!o.photo){try{o.photo=await apiBlob('/offers/'+id+'/photo');if((R.name==='detail')&&R.id===id)render()}catch(e){}}
+  }catch(e){fail(e)}
+}
+const errMsg=e=>{
+  if(e&&e.status===0)return t('e.net');
+  if(e&&e.status===429)return t('e.rate',{n:e.retry||60});
+  const k='e.'+(e&&e.code);return t(k)===k?t('e.generic'):t(k);
+};
+function fail(e,f){if(e&&e.code==='session')return;const m=errMsg(e);if(f)setErr(f,m);else toast(m)}
+function busy(f,on){const b=f&&f.querySelector('button:not([type=button])');if(b){b.disabled=on;b.style.opacity=on?.6:''}}
+
+function seed(){
+  const now=Date.now(),mins=x=>now-x*60000;
+  const H=p=>p.map((v,i)=>({d:49-7*i,p:v}));
+  const ean=b=>b+eanCheck(b);
+  const C=(a,txt,m,me)=>({a,txt,ts:mins(m),me:!!me});
+  const offers=[
+    {id:'s1',cat:'super',title:'Leche en polvo entera 800 g',store:'Súper Familiar',now:5.45,old:7.20,ean:ean('741234500011'),author:'carmen_ahorra',ts:mins(95),up:238,down:12,reports:0,history:H([7.10,7.15,7.05,7.20,7.10,7.15,6.40,5.45]),comments:[C('carmen_ahorra','Hoy en la sucursal del centro. Quedaban unas 20 latas.',80),C('luis.m','Confirmo, la compré a ese precio.',40)]},
+    {id:'s2',cat:'super',title:'Leche en polvo entera 800 g',store:'Autoservicio Don Pepe',now:5.60,old:6.90,ean:ean('741234500011'),author:'donpepe_fan',ts:mins(300),up:64,down:9,reports:0,history:H([6.90,6.95,6.90,7.00,6.95,6.90,6.20,5.60]),comments:[]},
+    {id:'s3',cat:'super',title:'Arroz blanco 5 lb',store:'Súper Familiar',now:2.45,old:3.10,ean:ean('741234500028'),author:'me',ts:mins(1500),up:151,down:6,reports:0,history:H([2.95,3.00,2.90,3.05,3.00,2.95,2.80,2.45]),comments:[C('ana.r','¿Hay límite por persona?',1300),C('me','Sí, 4 bolsas por cliente.',1250,true)]},
+    {id:'s4',cat:'super',title:'Aceite vegetal 1 L',store:'Hiper Ahorro',now:2.99,old:4.50,ean:ean('741234500035'),author:'oferton99',ts:mins(2900),up:38,down:141,reports:2,history:H([2.95,3.05,2.99,3.10,2.99,3.00,4.50,2.99]),comments:[C('ana.r','Costaba lo mismo la semana pasada. No es rebaja.',2700)]},
+    {id:'t1',cat:'tech',title:'Audífonos Bluetooth con cancelación de ruido',store:'TecnoPlaza',now:39.90,old:59.90,author:'techero',ts:mins(210),up:322,down:18,reports:0,history:H([58.0,59.9,59.9,57.5,59.9,59.0,59.9,39.90]),comments:[C('techero','Incluye estuche y cable. Válido hasta el domingo.',200)]},
+    {id:'t2',cat:'tech',title:'Smartphone 128 GB pantalla 6.5"',store:'Mundo Móvil',now:189.00,old:205.00,author:'gadgetgirl',ts:mins(880),up:41,down:22,reports:0,history:H([205,199,199,199,195,195,189,189]),comments:[]},
+    {id:'t3',cat:'tech',title:'Monitor 24" Full HD',store:'TecnoPlaza',now:119.00,old:179.00,author:'pcgamer_sv',ts:mins(1900),up:20,down:97,reports:0,history:H([119,119,125,119,119,122,179,119]),comments:[C('luis.m','El precio “antes” solo duró una semana. Cuidado.',1800)]},
+    {id:'t4',cat:'tech',title:'Teclado mecánico inalámbrico',store:'Digital Hub',now:34.50,old:49.00,author:'me',ts:mins(4300),up:118,down:7,reports:0,history:H([48,49,49,47,49,49,45,34.5]),comments:[]},
+    {id:'r1',cat:'ropa',title:'Jeans slim para hombre',store:'Moda Express',now:14.99,old:29.99,author:'modaflash',ts:mins(150),up:187,down:24,reports:0,history:H([29.99,29.99,24.99,29.99,29.99,29.99,29.99,14.99]),comments:[C('modaflash','Tallas 28 a 38. En tienda y en línea.',140)]},
+    {id:'r2',cat:'ropa',title:'Camisa polo, paquete de 2',store:'Casa de Moda',now:12.00,old:24.00,author:'me',ts:mins(2200),up:12,down:59,reports:1,history:H([12,12,13,12,12,12,24,12]),comments:[]},
+    {id:'r3',cat:'ropa',title:'Zapatillas deportivas running',store:'Calzado Total',now:32.50,old:45.00,author:'runner503',ts:mins(700),up:96,down:5,reports:0,history:H([46,45,45,44,45,45,40,32.5]),comments:[]},
+    {id:'r4',cat:'ropa',title:'Vestido casual de verano',store:'Boutique Lila',now:20.50,old:22.00,author:'lila_v',ts:mins(3100),up:33,down:15,reports:0,history:H([22,22,21,22,22,20,21,20.5]),comments:[]}
+  ];
+  return{
+    v:1,lang:'es',role:'cazador',push:true,
+    user:{karma:140,voted:{},catVotes:{}},
+    cats:[{id:'super',icon:'cart',color:'var(--c-super)',base:true},{id:'tech',icon:'phone',color:'var(--c-tech)',base:true},{id:'ropa',icon:'shirt',color:'var(--c-ropa)',base:true}],
+    offers,
+    proposals:[
+      {id:'p1',name:'Útiles escolares',why:'Cada enero los precios suben de golpe y nadie los compara.',by:'ana.r',votes:499,created:false},
+      {id:'p2',name:'Mascotas',why:'Alimento y accesorios pesan en el presupuesto del hogar.',by:'lila_v',votes:418,created:false},
+      {id:'p3',name:'Ferretería',why:'Herramientas y materiales de construcción con precios muy distintos entre tiendas.',by:'pcgamer_sv',votes:342,created:false},
+      {id:'p4',name:'Hogar y muebles',why:'Electrodomésticos y muebles tienen rebajas fuertes en temporadas.',by:'luis.m',votes:210,created:false}
+    ],
+    alerts:[
+      {id:'a1',kw:'leche en polvo',max:5.00,on:true,seen:[]},
+      {id:'a2',kw:'arroz',max:2.60,on:true,seen:[]},
+      {id:'a3',kw:'audífonos',max:35.00,on:false,seen:[]}
+    ],
+    notifs:[
+      {id:'n1',k:'n.welcome',p:{},ts:mins(2),read:false},
+      {id:'n2',k:'n.vote',p:{title:'Arroz blanco 5 lb',n:12},ts:mins(190),read:false},
+      {id:'n3',k:'n.reply',p:{a:'ana.r',title:'Arroz blanco 5 lb'},ts:mins(1300),read:true}
+    ],
+    reports:[],
+    karmaLog:[{k:'k.publish',pts:15,ts:mins(1500)},{k:'k.vote',pts:1,ts:mins(900)},{k:'k.comment',pts:2,ts:mins(1250)}]
+  };
+}
+function load(){try{let r=localStorage.getItem(KEY);if(!r)r=localStorage.getItem('bajo.prototipo.v1'); /* datos guardados antes del cambio de nombre */return r?JSON.parse(r):null}catch(e){return null}}
+function save(){try{if(SRV)localStorage.setItem(KEY+'.srv',JSON.stringify({lang:S.lang,push:S.push}));else localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+S=SRV?srvState():(load()||seed());
+
+/* estado de la interfaz (no se guarda) */
+const UI={cat:'super',sort:'hot',scan:null,photo:null,draft:null,modOffer:null,link:null,resetArm:false};
+const R={name:'home',id:null,tab:'home',stack:[]};
+
+/* ================= AYUDAS ================= */
+const byId=id=>S.offers.find(o=>o.id===id);
+const catOf=id=>S.cats.find(c=>c.id===id)||S.cats[0];
+const catName=c=>c.base?t('cat.'+c.id):c.name;
+function ago(ts){const m=Math.max(0,Math.floor((Date.now()-ts)/60000));return m<60?t('ago.m',{n:Math.max(1,m)}):m<1440?t('ago.h',{n:Math.floor(m/60)}):t('ago.d',{n:Math.floor(m/1440)})}
+function who(a){return a==='me'?t('me.you'):a}
+function addKarma(k,pts,cap){
+  if(cap){const since=Date.now()-864e5;if(S.karmaLog.filter(x=>x.k===k&&x.ts>since).length>=cap)return 0}
+  S.user.karma+=pts;S.karmaLog.unshift({k,pts,ts:Date.now()});S.karmaLog.length=Math.min(S.karmaLog.length,30);return pts;
+}
+function pushNotif(k,p){S.notifs.unshift({id:uid(),k,p:p||{},ts:Date.now(),read:false});S.notifs.length=Math.min(S.notifs.length,40)}
+const unread=()=>S.notifs.filter(n=>!n.read).length;
+let tt;function toast(m){const el=$('#toast');el.textContent=m;el.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('on'),2800)}
+function checkAlertsFor(o){let n=0;S.alerts.forEach(a=>{if(matchAlert(a,o)&&!a.seen.includes(o.id)){a.seen.push(o.id);pushNotif('n.alert',{title:o.title,price:fmt(o.now),max:fmt(a.max)});n++}});return n}
+function runAlerts(){let n=0;S.offers.forEach(o=>{n+=checkAlertsFor(o)});return n}
+const urlWhy=f=>f.map(x=>t('u.'+x)).join(', ');
+const safeHref=u=>/^https?:\/\//i.test(u)?u:'#';
+
+/* ================= VISTAS ================= */
+function bellBtn(){const n=unread();return `<button class="icbtn" data-a="goNotif" aria-label="${t('nt.title')}">${ico('bell')}${n?`<span class="badge">${n}</span>`:''}</button>`}
+function bar(title,right=''){return `<header class="top"><div class="top-in gut"><button class="icbtn" data-a="back" aria-label="${t('back')}">${ico('back')}</button><h1 class="ttl">${esc(title)}</h1><span class="sp"></span>${right}</div></header>`}
+function tabbar(){
+  const it=[['home','home'],['scan','scan'],['post','plus'],['alerts','bell'],['me','user']];
+  return `<nav class="bar" aria-label="Principal"><div class="bar-in gut">${it.map(([n,i])=>`<button class="tbtn ${n==='post'?'post':''}" data-a="tab" data-t="${n}" ${R.tab===n?'aria-current="page"':''}>${ico(i,24)}<span>${t('nav.'+n)}</span></button>`).join('')}</div></nav>`;
+}
+function thumb(o){const c=catOf(o.cat);return `<span class="thumb" style="--c:${c.color}">${o.photo?`<img src="${o.photo}" alt="">`:ico(c.icon,30)}</span>`}
+function tempBlock(o){const x=temp(o),h=heat(x);return `<span class="temp t-${h}">${ico(h==='hot'?'flame':h==='warm'?'therm':'snow',20)}<b>${x}°</b><span class="tw">${t('t.'+h)}</span></span>`}
+function offerRow(o,extra=''){
+  const v=verdictOf(o),pct=Math.round((o.old-o.now)/o.old*100);
+  return `<button class="row gut" data-a="open" data-id="${o.id}">${thumb(o)}<span class="rb"><span class="rt">${esc(o.title)}</span><span class="rm">${esc(o.store)} · ${ago(o.ts)}</span><span class="pr"><b>${fmt(o.now)}</b><s>${fmt(o.old)}</s><span class="pct">−${pct}%</span>${v.k==='fake'||v.k==='real'?`<span class="pill v-${v.k}">${t('v.'+v.k)}</span>`:''}${extra}</span></span>${tempBlock(o)}</button>`;
+}
+
+function vHome(){
+  if(!S.cats.some(c=>c.id===UI.cat))UI.cat=S.cats[0].id;
+  const list=S.offers.filter(o=>o.cat===UI.cat&&!o.hidden).sort(UI.sort==='new'?(a,b)=>b.ts-a.ts:(a,b)=>temp(b)-temp(a));
+  const c=catOf(UI.cat);
+  const tabs=S.cats.map(k=>`<button class="ctab" data-a="cat" data-id="${k.id}" ${UI.cat===k.id?'aria-current="true"':''}>${ico(k.icon,18)}${esc(catName(k))}</button>`).join('');
+  return `<header class="top"><div class="top-in gut"><h1 class="brand">${logo(24)}Tonalli</h1><span class="sp"></span>${bellBtn()}</div><div class="ctabs gut" role="group">${tabs}<button class="ctab add" data-a="goCats" aria-label="${t('home.propose')}">${ico('plus',18)}</button></div></header>
+  <main><div class="toolbar gut"><div class="seg"><button data-a="sort" data-s="hot" aria-pressed="${UI.sort==='hot'}">${t('home.hot')}</button><button data-a="sort" data-s="new" aria-pressed="${UI.sort==='new'}">${t('home.new')}</button></div></div>
+  ${list.length?`<div class="list">${list.map(o=>offerRow(o)).join('')}</div>`:`<div class="empty">${t('home.empty',{cat:esc(catName(c))})}</div>`}
+  ${SRV?srvBanner():`<p class="note gut" style="padding-block:14px">${t('sample')}</p>`}</main>`;
+}
+
+function vDetail(){
+  const o=byId(R.id);if(!o){R.name=R.tab;return VIEWS[R.tab]()}
+  const c=catOf(o.cat),my=S.user.voted[o.id]||0,tp=temp(o),h=heat(tp),pct=Math.round((o.old-o.now)/o.old*100);
+  const v=verdictOf(o);
+  const vp={pct:Math.round((v.real||0)*100),base:fmt(v.base||0),old:fmt(o.old),now:fmt(o.now)};
+  const gpos=Math.min(100,Math.max(0,(tp+100)/400*100));
+  const total=o.up+o.down,disputed=total>=30&&o.down/total>0.35;
+  const link=o.url?analyzeUrl(o.url):null;
+  const cm=o.comments.length?o.comments.map(m=>`<div class="cmt"><div class="who">${esc(m.me?t('me.you'):m.a)}<span>${ago(m.ts)}</span></div><p>${esc(m.txt)}</p></div>`).join(''):`<p class="note">${t('d.noComments')}</p>`;
+  return `${bar(catName(c))}<main class="gut pad stack">
+  ${o.hidden?`<div class="box v-fake" style="font-weight:600">${t('d.hidden')}</div>`:''}
+  <div class="hero" style="--c:${c.color}">${o.photo?`<img src="${o.photo}" alt="${esc(o.title)}">`:ico(c.icon,72)}</div>
+  <div style="display:grid;gap:6px"><h2 class="dt">${esc(o.title)}</h2><p class="note">${esc(o.store)} · ${ago(o.ts)} · ${t('d.by',{a:esc(who(o.author))})}</p></div>
+  <div class="bigp"><b>${fmt(o.now)}</b><s>${fmt(o.old)}</s><span class="pct" style="font-size:16px">−${pct}%</span></div>
+  <div class="box vbox"><span class="pill v-${v.k}">${ico(v.k==='real'?'check':v.k==='fake'?'flag':'chart',14)}${t('v.'+v.k)}</span><p>${t('v.'+v.k+'.d',vp)}</p><button class="btn" data-a="chart">${ico('chart',18)}${t('d.chart')}</button></div>
+  <div class="box"><div class="lab">${t('d.temp')}</div><div class="gauge"><i style="left:${gpos}%"></i></div>
+    <div class="gnum"><b class="t-${h}">${tp}°</b><span class="note">${t('d.votes',{u:o.up,d:o.down})}</span>${disputed?`<span class="pill v-mild">${t('d.disputed')}</span>`:''}</div></div>
+  <div class="votes"><button class="vb pos" data-a="vote" data-v="1" aria-pressed="${my===1}">${ico('up',20)}${t('d.pos')} +1</button><button class="vb neg" data-a="vote" data-v="-1" aria-pressed="${my===-1}">${ico('down',20)}${t('d.neg')} −1</button></div>
+  ${o.url?`<div class="box" style="display:grid;gap:8px"><div class="lab">${t('d.evidence')}</div><span class="pill ${link.ok?'v-real':'v-fake'}" style="justify-self:start">${ico(link.ok?'shield':'flag',14)}${link.ok?t('u.ok'):esc(urlWhy(link.flags))}</span><a class="btn" target="_blank" rel="noopener noreferrer" href="${esc(safeHref(link.url||o.url))}">${ico('link',18)}${t('d.store')}</a></div>`:''}
+  <div><div class="ph" style="margin-bottom:6px"><h3 class="lab">${t('d.debate')}</h3><button class="btn danger" data-a="report" style="min-height:40px">${ico('flag',16)}${t('d.report')}</button></div>
+    <div class="box" style="padding-block:4px">${cm}</div></div>
+  <form data-s="comment" class="sendrow"><div class="field" style="flex:1"><label class="lab" for="cmt" style="position:absolute;left:-9999px">${t('d.write')}</label><textarea id="cmt" name="txt" class="inp" maxlength="300" placeholder="${t('d.write')}"></textarea></div><button class="btn primary" style="min-width:48px" aria-label="${t('d.send')}">${ico('send',20)}</button></form>
+  </main>`;
+}
+
+function chartSvg(o){
+  const hs=o.history,v=verdictOf(o);
+  const W=360,Hh=236,L=48,Rr=16,T=16,B=32;
+  const prices=hs.map(h=>h.p).concat([o.old]);if(v.base)prices.push(v.base);
+  let lo=Math.min(...prices),hi=Math.max(...prices);const pad=(hi-lo)*.12||hi*.1||1;lo=Math.max(0,lo-pad);hi+=pad;
+  const X=d=>L+(1-d/49)*(W-L-Rr),Y=p=>T+(1-(p-lo)/(hi-lo))*(Hh-T-B);
+  const ticks=[0,1,2,3].map(i=>lo+(hi-lo)*i/3);
+  const grid=ticks.map(p=>`<line class="ch-grid" x1="${L}" x2="${W-Rr}" y1="${Y(p).toFixed(1)}" y2="${Y(p).toFixed(1)}"/><text class="ch-t" x="${L-6}" y="${(Y(p)+4).toFixed(1)}" text-anchor="end">${p>=100?p.toFixed(0):p.toFixed(2)}</text>`).join('');
+  const xl=[[49,'start'],[28,'middle'],[14,'middle'],[0,'end']].map(([d,a])=>`<text class="ch-t" x="${X(d).toFixed(1)}" y="${Hh-10}" text-anchor="${a}">${d===0?t('ch.now'):t('ch.week',{n:d/7})}</text>`).join('');
+  const pts=hs.map(h=>`${X(h.d).toFixed(1)} ${Y(h.p).toFixed(1)}`);
+  const line='M'+pts.join(' L'),area=`${line} L${X(0).toFixed(1)} ${Y(lo).toFixed(1)} L${X(49).toFixed(1)} ${Y(lo).toFixed(1)}Z`;
+  const dots=hs.map((h,i)=>i===hs.length-1?`<circle cx="${X(h.d).toFixed(1)}" cy="${Y(h.p).toFixed(1)}" r="5.5" style="fill:var(--${v.k==='real'?'good':v.k==='fake'?'bad':'warn'});stroke:var(--surface);stroke-width:2"/>`:`<circle class="ch-pt" cx="${X(h.d).toFixed(1)}" cy="${Y(h.p).toFixed(1)}" r="3"/>`).join('');
+  const lab=`${t('ch.title')}: ${o.title}`;
+  return `<svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="${esc(lab)}"><title>${esc(lab)}</title>${grid}${xl}<path class="ch-area" d="${area}"/><line class="ch-decl" x1="${L}" x2="${W-Rr}" y1="${Y(o.old).toFixed(1)}" y2="${Y(o.old).toFixed(1)}"/>${v.base?`<line class="ch-base" x1="${L}" x2="${W-Rr}" y1="${Y(v.base).toFixed(1)}" y2="${Y(v.base).toFixed(1)}"/>`:''}<path class="ch-line" d="${line}"/>${dots}</svg>`;
+}
+function vChart(){
+  const o=byId(R.id);if(!o){R.name=R.tab;return VIEWS[R.tab]()}
+  const v=verdictOf(o);
+  const vp={pct:Math.round((v.real||0)*100),base:fmt(v.base||0),old:fmt(o.old),now:fmt(o.now)};
+  const has=o.history.length>=5;
+  return `${bar(t('ch.title'))}<main class="gut pad stack">
+  <div><h2 class="dt" style="font-size:20px">${esc(o.title)}</h2><p class="note">${esc(o.store)} · ${t('ch.sub')}</p></div>
+  <div class="box vbox"><span class="pill v-${v.k}">${t('v.'+v.k)}</span><p>${t('v.'+v.k+'.d',vp)}</p></div>
+  ${has?`<div class="chartwrap">${chartSvg(o)}</div>
+  <div class="legend"><span><i style="border-color:var(--fg)"></i>${t('ch.line')}</span><span><i style="border-color:var(--accent);border-top-style:dashed"></i>${t('ch.base')}</span><span><i style="border-color:var(--bad);border-top-style:dotted"></i>${t('ch.decl')}</span></div>
+  <div class="stats"><div><span class="lab">${t('ch.base')}</span><b>${fmt(v.base)}</b></div><div><span class="lab">${t('d.before')}</span><b>${fmt(o.old)}</b></div><div><span class="lab">${t('ch.now')}</span><b>${fmt(o.now)}</b></div></div>
+  <p class="note">${t('ch.howto')}</p>`:`<div class="empty box">${t('ch.empty')}</div>`}
+  </main>`;
+}
+
+function vPost(){
+  if(S.role!=='cazador')return `${bar(t('pub.title'))}<main class="gut pad stack"><div class="box stack"><p>${t('pub.locked')}</p><button class="btn primary" data-a="role" data-r="cazador">${t('pub.activate')}</button></div></main>`.replace(bar(t('pub.title')),`<header class="top"><div class="top-in gut"><h1 class="ttl">${t('pub.title')}</h1></div></header>`);
+  const d=UI.draft||{};
+  const cats=S.cats.map((c,i)=>`<input type="radio" name="cat" id="pc-${c.id}" value="${c.id}" ${(UI.cat===c.id)?'checked':''}><label for="pc-${c.id}">${ico(c.icon,18)}${esc(catName(c))}</label>`).join('');
+  return `<header class="top"><div class="top-in gut"><h1 class="ttl">${t('pub.title')}</h1></div></header>
+  <main class="gut pad"><form data-s="pub" class="stack" novalidate>
+   <div class="field"><span class="lab">${t('pub.cat')}</span><div class="chips">${cats}</div><p class="note">${t('pub.catNote')}</p></div>
+   <div class="field"><label for="f-title">${t('pub.product')}</label><input id="f-title" name="title" class="inp" maxlength="80" placeholder="${t('pub.productPh')}" autocomplete="off"></div>
+   <div class="field"><label for="f-store">${t('pub.store')}</label><input id="f-store" name="store" class="inp" maxlength="50" placeholder="${t('pub.storePh')}" autocomplete="off"></div>
+   <div class="two"><div class="field"><label for="f-old">${t('pub.old')}</label><input id="f-old" name="old" class="inp mono" inputmode="decimal" placeholder="0.00"></div><div class="field"><label for="f-now">${t('pub.now')}</label><input id="f-now" name="now" class="inp mono" inputmode="decimal" placeholder="0.00"></div></div>
+   <div class="field"><span class="lab">${t('pub.photo')}</span><label class="btn" for="f-photo" style="cursor:pointer">${ico('camera',18)}${t('pub.photoBtn')}</label><input id="f-photo" type="file" accept="image/*" data-c="photo" style="position:absolute;opacity:0;width:1px;height:1px"><div id="pv" class="hero" style="--c:var(--accent);max-width:220px" ${UI.photo?'':'hidden'}>${UI.photo?`<img src="${UI.photo}" alt="">`:''}</div></div>
+   <div class="field"><label for="f-url">${t('pub.url')}</label><input id="f-url" name="url" class="inp" inputmode="url" placeholder="https://" autocomplete="off"></div>
+   <div class="field"><label for="f-ean">${t('pub.ean')}</label><input id="f-ean" name="ean" class="inp mono" inputmode="numeric" value="${esc(d.ean||'')}" autocomplete="off"></div>
+   <p class="err" role="alert"></p>
+   <button class="btn primary block">${t('pub.submit')}</button></form></main>`;
+}
+
+function offerList(list,first){return `<div class="list">${list.map((o,i)=>offerRow(o,first&&i===0?`<span class="pill v-real">${t('sc.cheapest')}</span>`:'')).join('')}</div>`}
+function vScan(){
+  const s=UI.scan,samples=[...new Set(S.offers.filter(o=>o.ean).map(o=>o.ean))];
+  let res='';
+  if(s){
+    if(s.mode==='code'){
+      if(!s.valid)res=`<p class="err" role="alert" style="display:block">${t('sc.bad')}</p>`;
+      else if(!s.list.length)res=`<div class="box stack"><p class="note mono">${t('sc.code',{c:s.q})}</p><p>${t('sc.none')}</p><button class="btn primary" data-a="reportPrice" data-ean="${esc(s.q)}">${t('sc.report')}</button></div>`;
+      else res=`<p class="note gut" style="padding:0">${t('sc.code',{c:s.q})} · ${t('sc.count',{n:s.list.length})}</p>`+'';
+    }else res=s.list.length?'':`<div class="empty">${t('sc.empty')}</div>`;
+  }
+  const list=s&&s.list&&s.list.length?`<div style="margin-inline:calc(-1*max(16px,env(safe-area-inset-left,0px)))">${offerList(s.list,s.mode==='code')}</div>`:'';
+  return `<header class="top"><div class="top-in gut"><h1 class="ttl">${t('sc.title')}</h1></div></header>
+  <main class="gut pad stack">
+   ${window.TonalliNative?`<button type="button" class="btn primary block" data-a="nativeScan">${ico('camera',18)}${t('sc.cam')}</button>`:''}
+   <form data-s="scan" class="stack"><div class="field"><label for="q" style="position:absolute;left:-9999px">${t('sc.ph')}</label><div style="display:flex;gap:8px"><input id="q" name="q" class="inp" value="${esc(s?s.q:'')}" placeholder="${t('sc.ph')}" autocomplete="off" enterkeyhint="search" style="flex:1;min-width:0"><button class="btn primary">${t('sc.go')}</button></div></div>
+   <div><label class="btn block" for="bc" style="cursor:pointer">${ico('camera',18)}${t('sc.photo')}</label><input id="bc" type="file" accept="image/*" data-c="barcode" style="position:absolute;opacity:0;width:1px;height:1px"></div></form>
+   <div class="field"><span class="lab">${t('sc.samples')}</span><div class="chips">${samples.map(e=>`<button type="button" class="btn mono" data-a="sample" data-ean="${e}" style="min-height:40px;font-size:13px">${e}</button>`).join('')}</div></div>
+   ${s?res:`<p class="note">${t('sc.hint')}</p>`}${list}
+  </main>`;
+}
+
+function vCats(){
+  const lvl=levelOf(S.user.karma),canLvl=lvl>=PROPOSE_LVL,canRole=S.role==='cazador';
+  const open=S.proposals.filter(p=>!p.created);
+  return `${bar(t('ct.title'))}<main class="gut pad stack">
+  <p class="note">${t('ct.intro',{n:GOAL})}</p>
+  <div class="field"><span class="lab">${t('ct.active')}</span><div class="chips">${S.cats.map(c=>`<span class="pill" style="font-size:13px;padding:7px 12px;color:var(--fg)"><span style="color:${c.color};display:flex">${ico(c.icon,16)}</span>${esc(catName(c))}</span>`).join('')}</div></div>
+  <div><h2 class="lab" style="margin-bottom:4px">${t('ct.open')}</h2><div class="box" style="padding-block:0">${open.map(p=>{const voted=S.user.catVotes[p.id];return `<div class="prop"><div class="ph"><h3>${esc(p.name)}</h3><button class="btn ${voted?'':'primary'}" data-a="pvote" data-id="${p.id}" ${voted?'disabled aria-disabled="true"':''} style="min-height:40px">${voted?t('ct.voted'):t('ct.vote')}</button></div><p class="note">${esc(p.why)} · ${t('ct.by',{a:esc(who(p.by))})}</p><div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="${GOAL}" aria-valuenow="${p.votes}"><i style="width:${Math.min(100,p.votes/GOAL*100)}%"></i></div><p class="note mono">${t('ct.votes',{v:p.votes,n:GOAL})}</p></div>`}).join('')||`<p class="empty">—</p>`}</div></div>
+  <div class="box stack"><h2 class="lab">${t('ct.form')}</h2>
+  ${!canRole?`<p>${t('ct.role')}</p>`:!canLvl?`<p>${t('ct.lock',{lvl:t('lvl.'+PROPOSE_LVL),pts:LV[PROPOSE_LVL],n:LV[PROPOSE_LVL]-S.user.karma})}</p>`:
+  `<form data-s="propose" class="stack" novalidate><div class="field"><label for="pn">${t('ct.name')}</label><input id="pn" name="name" class="inp" maxlength="40" placeholder="${t('ct.namePh')}" autocomplete="off"></div><div class="field"><label for="pw">${t('ct.why')}</label><textarea id="pw" name="why" class="inp" maxlength="200"></textarea></div><p class="err" role="alert"></p><button class="btn primary">${t('ct.send')}</button></form>`}</div>
+  </main>`;
+}
+
+function vMe(){
+  const k=S.user.karma,lv=levelOf(k),nx=LV[lv+1],pct=nx?(k-LV[lv])/(nx-LV[lv])*100:100;
+  const mine=S.offers.filter(o=>o.author==='me'),good=mine.filter(o=>o.up>=o.down).length;
+  const ver=mine.length?Math.round(good/mine.length*100):100;
+  const votes=Object.values(S.user.voted).filter(Boolean).length;
+  return `<header class="top"><div class="top-in gut"><h1 class="ttl">${t('me.title')}</h1><span class="sp"></span>${bellBtn()}</div></header>
+  <main class="gut pad stack">
+  <div class="stack" style="gap:10px"><p class="hello">${t('hello')}, ${SRV&&S.me?esc(S.me.handle):t('me.you')}</p>
+   <div class="kbig"><b>${k}</b><span class="pill" style="font-size:12px">${t('lvl.'+lv)}</span></div>
+   <div class="prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}"><i style="width:${pct}%"></i></div>
+   <p class="note">${nx?t('me.next',{n:nx-k,lvl:t('lvl.'+(lv+1))}):t('me.max')}</p></div>
+  <div class="stats"><div><span class="lab">${t('me.pub')}</span><b>${mine.length}</b></div><div><span class="lab">${t('me.ver')}</span><b>${ver}%</b></div><div><span class="lab">${t('me.votes')}</span><b>${votes}</b></div></div>
+  <div class="field"><span class="lab">${t('me.mode')}</span><div class="seg"><button data-a="role" data-r="rastreador" aria-pressed="${S.role==='rastreador'}">${t('me.r')}</button><button data-a="role" data-r="cazador" aria-pressed="${S.role==='cazador'}">${t('me.c')}</button></div><p class="note">${S.role==='cazador'?t('me.cd'):t('me.rd')}</p></div>
+  <div class="menu" style="margin-inline:calc(-1*max(16px,env(safe-area-inset-left,0px)))">
+   <button class="mi gut" data-a="goCats">${ico('tag',22)}<span>${t('me.cats')}</span><span class="sp"></span>${ico('chev',18)}</button>
+   <button class="mi gut" data-a="goMod">${ico('shield',22)}<span>${t('me.mod')}</span><span class="sp"></span>${ico('chev',18)}</button>
+   <button class="mi gut" data-a="goNotif">${ico('globe',22)}<span>${t('me.settings')}</span><span class="sp"></span>${ico('chev',18)}</button></div>
+  <div><h2 class="lab" style="margin-bottom:4px">${t('me.log')}</h2><div class="box" style="padding-block:4px">${S.karmaLog.length?S.karmaLog.slice(0,6).map(x=>`<div class="logrow"><span>${t(x.k)} <span class="note">· ${ago(x.ts)}</span></span><b>+${x.pts}</b></div>`).join(''):`<p class="note" style="padding:10px 0">${t('me.logEmpty')}</p>`}</div></div>
+  </main>`;
+}
+
+function vAlerts(){
+  const rows=S.alerts.map(a=>{
+    const ms=S.offers.filter(o=>matchAlert({...a,on:true},o));
+    const low=S.offers.filter(o=>!o.hidden&&norm(o.title).includes(norm(a.kw))).map(o=>o.now);
+    const st=ms.length?`<span class="pill v-real">${t('al.match',{n:ms.length})}</span>`:`<span class="note">${low.length?t('al.nomatch',{p:fmt(Math.min(...low))}):t('al.nodata')}</span>`;
+    return `<div class="alrow"><div style="min-width:0"><h3>${esc(a.kw)}</h3><p class="note mono">${t('al.below',{p:fmt(a.max)})}</p></div><label class="sw"><input type="checkbox" data-c="alertOn" data-id="${a.id}" ${a.on?'checked':''} aria-label="${t('al.on')}: ${esc(a.kw)}"><span></span></label><div>${st}</div><button class="icbtn" data-a="delAlert" data-id="${a.id}" aria-label="${t('al.del')}: ${esc(a.kw)}" style="width:40px;height:40px">${ico('trash',18)}</button></div>`}).join('');
+  return `<header class="top"><div class="top-in gut"><h1 class="ttl">${t('al.title')}</h1><span class="sp"></span>${bellBtn()}</div></header>
+  <main class="gut pad stack">
+   <div class="box" style="padding-block:2px">${rows||`<p class="note" style="padding:14px 0">${t('al.none')}</p>`}</div>
+   <button class="btn block" data-a="testAlerts">${ico('bell',18)}${t('al.test')}</button>
+   <form data-s="alert" class="box stack" novalidate><h2 class="lab">${t('al.new')}</h2>
+    <div class="field"><label for="ak">${t('al.product')}</label><input id="ak" name="kw" class="inp" maxlength="40" placeholder="${t('al.productPh')}" autocomplete="off"></div>
+    <div class="field"><label for="am">${t('al.max')}</label><input id="am" name="max" class="inp mono" inputmode="decimal" placeholder="5.00"></div>
+    <p class="err" role="alert"></p><button class="btn primary">${t('al.save')}</button></form>
+  </main>`;
+}
+
+function vMod(){
+  const opts=S.offers.map(o=>`<option value="${o.id}" ${UI.modOffer===o.id?'selected':''}>${esc(o.title)} · ${esc(o.store)}</option>`).join('');
+  const reasons=['spam','link','illegal','fake','other'].map((r,i)=>`<input type="radio" name="reason" id="r-${r}" value="${r}" ${i===0?'checked':''}><label for="r-${r}">${t('md.'+r)}</label>`).join('');
+  const mine=S.reports.map(r=>{const o=byId(r.offer);return `<div class="logrow"><span style="min-width:0">${esc(o?o.title:'—')}<br><span class="note">${t('md.'+r.reason)} · ${ago(r.ts)}</span></span><span class="pill ${o&&o.hidden?'v-fake':'v-mild'}">${o&&o.hidden?t('md.hidden'):t('md.open')}</span></div>`}).join('');
+  const lr=UI.link;
+  return `${bar(t('md.title'))}<main class="gut pad stack">
+  <form data-s="report" class="box stack" novalidate><h2 class="lab">${t('md.report')}</h2>
+   <div class="field"><label for="ro">${t('md.which')}</label><select id="ro" name="offer" class="inp"><option value="">${t('md.pick')}</option>${opts}</select></div>
+   <div class="field"><span class="lab">${t('md.reason')}</span><div class="chips">${reasons}</div></div>
+   <div class="field"><label for="rd">${t('md.detail')}</label><textarea id="rd" name="detail" class="inp" maxlength="200"></textarea></div>
+   <p class="note">${t('md.auto',{n:AUTOHIDE})}</p><p class="err" role="alert"></p><button class="btn primary">${t('md.send')}</button></form>
+  <div><h2 class="lab" style="margin-bottom:4px">${t('md.mine')}</h2><div class="box" style="padding-block:4px">${mine||`<p class="note" style="padding:10px 0">${t('md.none')}</p>`}</div></div>
+  <form data-s="link" class="box stack" novalidate><h2 class="lab">${t('md.check')}</h2><div style="display:flex;gap:8px"><input name="u" class="inp" placeholder="https://" aria-label="${t('md.check')}" style="flex:1;min-width:0" value="${esc(lr?lr.raw:'')}" autocomplete="off" inputmode="url"><button class="btn">${t('md.checkBtn')}</button></div>
+   ${lr?`<span class="pill ${lr.ok?'v-real':'v-fake'}" style="justify-self:start;white-space:normal;line-height:1.3">${ico(lr.ok?'shield':'flag',14)}${lr.ok?t('u.ok'):esc(urlWhy(lr.flags))}</span>`:''}</form>
+  <div class="box stack" style="gap:8px"><h2 class="lab">${t('md.rules')}</h2><p>1. ${t('md.r1')}</p><p>2. ${t('md.r2')}</p><p>3. ${t('md.r3')}</p><p>4. ${t('md.r4')}</p></div>
+  </main>`;
+}
+
+function vNotif(){
+  const icn={'n.alert':'bell','n.vote':'flame','n.reply':'msg','n.cat':'tag','n.hide':'flag','n.welcome':'therm'};
+  const rows=S.notifs.map(n=>`<div class="nrow gut ${n.read?'':'un'}"><span class="nic">${ico(icn[n.k]||'bell',18)}</span><div><p>${t(n.k,Object.fromEntries(Object.entries(n.p).map(([a,b])=>[a,typeof b==='string'?esc(b):b])))}</p><p class="note">${ago(n.ts)}</p></div></div>`).join('');
+  return `${bar(t('nt.title'))}<main class="pad stack" style="padding-inline:0">
+  <div class="gut stack"><div class="field"><span class="lab">${t('nt.lang')}</span><div class="seg" role="group">${LANGS.map(([c,n])=>`<button data-a="lang" data-l="${c}" aria-pressed="${S.lang===c}">${n}</button>`).join('')}</div>${S.lang==='nah'?`<p class="note">${t('nt.langNote')}</p>`:''}</div>
+   <div class="box" style="display:flex;align-items:center;gap:12px"><div style="flex:1"><b>${t('nt.push')}</b><p class="note">${t('nt.pushD')}</p></div><label class="sw"><input type="checkbox" data-c="push" ${S.push?'checked':''} aria-label="${t('nt.push')}"><span></span></label></div></div>
+  <div><div class="gut ph" style="margin-bottom:6px"><h2 class="lab">${t('nt.list')}</h2>${unread()?`<button class="btn" data-a="readAll" style="min-height:38px">${t('nt.read')}</button>`:''}</div>
+   <div class="list">${rows||`<p class="empty">${t('nt.none')}</p>`}</div></div>
+  <div class="gut">${SRV?`<button class="btn block danger" data-a="logout">${t('au.logout')}</button>`:`<button class="btn block danger" data-a="reset">${UI.resetArm?t('nt.sure'):t('nt.reset')}</button>`}</div>
+  </main>`;
+}
+
+const VIEWS={auth:()=>vAuth(),home:vHome,scan:vScan,post:vPost,alerts:vAlerts,me:vMe,detail:vDetail,chart:vChart,cats:vCats,mod:vMod,notif:vNotif};
+function render(reset){
+  const m=document.querySelector('main'),st=m&&!reset?m.scrollTop:0;
+  document.documentElement.lang=S.lang==='nah'?'es':S.lang;
+  const gate=SRV&&!S.me;if(gate)R.name='auth';
+  $('#screen').innerHTML=VIEWS[R.name]()+(gate?'':tabbar());
+  const nm=document.querySelector('main');if(nm)nm.scrollTop=st;
+}
+function tab(n){R.name=n;R.tab=n;R.id=null;R.stack=[];render(true)}
+function go(n,id){R.stack.push({name:R.name,id:R.id});R.name=n;R.id=id??null;render(true)}
+function back(){const p=R.stack.pop();if(p){R.name=p.name;R.id=p.id}else{R.name=R.tab;R.id=null}render(true)}
+
+/* ================= ACCIONES ================= */
+const ACT={
+  tab:el=>tab(el.dataset.t),
+  back:()=>back(),
+  open:el=>go('detail',el.dataset.id),
+  goNotif:()=>go('notif'),goCats:()=>go('cats'),goMod:()=>{UI.modOffer=null;go('mod')},
+  cat:el=>{UI.cat=el.dataset.id;render()},
+  sort:el=>{UI.sort=el.dataset.s;render()},
+  chart:()=>go('chart',R.id),
+  report:()=>{UI.modOffer=R.id;go('mod')},
+  role:el=>{S.role=el.dataset.r;save();render()},
+  lang:el=>{S.lang=el.dataset.l;save();render()},
+  readAll:()=>{S.notifs.forEach(n=>n.read=true);save();render()},
+  reset:()=>{if(!UI.resetArm){UI.resetArm=true;render();setTimeout(()=>{UI.resetArm=false},4000);return}
+    UI.resetArm=false;try{localStorage.removeItem(KEY)}catch(e){};const lang=S.lang;S=seed();S.lang=lang;UI.cat='super';UI.scan=null;UI.photo=null;save();tab('home');toast(t('nt.done'))},
+  vote:el=>{
+    const o=byId(R.id),val=+el.dataset.v,prev=S.user.voted[o.id]||0;
+    if(prev===val){val===1?o.up--:o.down--;delete S.user.voted[o.id]}
+    else{if(prev===1)o.up--;if(prev===-1)o.down--;val===1?o.up++:o.down++;S.user.voted[o.id]=val;if(!prev)addKarma('k.vote',1,20)}
+    save();render();
+  },
+  pvote:el=>{
+    const p=S.proposals.find(x=>x.id===el.dataset.id);if(!p||p.created||S.user.catVotes[p.id])return;
+    S.user.catVotes[p.id]=1;p.votes++;addKarma('k.catvote',1,20);
+    if(p.votes>=GOAL){S.cats.push({id:'x'+uid(),name:p.name,icon:'tag',color:EXTRA[(S.cats.length-3)%EXTRA.length],base:false});p.created=true;pushNotif('n.cat',{name:p.name});toast(t('ct.new',{name:p.name}))}
+    save();render();
+  },
+  delAlert:el=>{S.alerts=S.alerts.filter(a=>a.id!==el.dataset.id);save();render()},
+  testAlerts:()=>{const n=runAlerts();save();render();toast(n?t('al.tested',{n}):t('al.none2'))},
+  sample:el=>doScan(el.dataset.ean),
+  nativeScan:()=>{try{window.TonalliNative.scanBarcode()}catch(e){toast(t('sc.noread'))}},
+  reportPrice:el=>{UI.draft={ean:el.dataset.ean};tab('post')}
+};
+const CHG={
+  alertOn:el=>{const a=S.alerts.find(x=>x.id===el.dataset.id);if(a){a.on=el.checked;save();render()}},
+  push:el=>{S.push=el.checked;save()},
+  photo:async el=>{
+    const f=el.files&&el.files[0];if(!f)return;
+    try{UI.photo=await shrink(f);const pv=$('#pv');pv.innerHTML=`<img src="${UI.photo}" alt="">`;pv.hidden=false}
+    catch(e){setErr(el.closest('form'),t('pub.e.photo'))}
+  },
+  barcode:async el=>{
+    const f=el.files&&el.files[0];if(!f)return;
+    if(!('BarcodeDetector' in window)){UI.scan={q:'',mode:'text',list:[],msg:1};render();toast(t('sc.nobd'));return}
+    try{const bmp=await createImageBitmap(f),det=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e']}),r=await det.detect(bmp);
+      if(r.length)doScan(r[0].rawValue);else toast(t('sc.noread'))}
+    catch(e){toast(t('sc.noread'))}
+  }
+};
+function setErr(f,m){const e=f&&f.querySelector('.err');if(e)e.textContent=m}
+function shrink(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onerror=rej;fr.onload=()=>{const im=new Image();im.onerror=rej;im.onload=()=>{const k=Math.min(1,640/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.7))};im.src=fr.result};fr.readAsDataURL(file)})}
+
+function doScan(raw){
+  raw=String(raw||'').trim();const digits=raw.replace(/\D/g,'');
+  if(digits&&digits===raw.replace(/\s/g,'')&&digits.length>=8){
+    const valid=isValidEAN(digits),e=toEAN13(digits);
+    UI.scan={q:digits,mode:'code',valid,list:valid?S.offers.filter(o=>o.ean===e&&!o.hidden).sort((a,b)=>a.now-b.now):[]};
+  }else{
+    const q=norm(raw);
+    UI.scan={q:raw,mode:'text',list:q?S.offers.filter(o=>!o.hidden&&(norm(o.title).includes(q)||norm(o.store).includes(q))).sort((a,b)=>temp(b)-temp(a)):[]};
+  }
+  render();
+}
+
+const SUB={
+  scan:f=>doScan(f.elements.q.value),
+  comment:f=>{
+    const v=f.elements.txt.value.trim();if(!v)return;const o=byId(R.id);
+    o.comments.push({a:'me',txt:v.slice(0,300),ts:Date.now(),me:true});addKarma('k.comment',2,10);save();render();
+    const m=document.querySelector('main');if(m)m.scrollTop=m.scrollHeight;
+  },
+  pub:f=>{
+    const g=n=>f.elements[n].value.trim(),num=s=>parseFloat(String(s).replace(',','.'));
+    const cat=f.elements.cat.value,title=g('title'),store=g('store'),old=num(g('old')),now=num(g('now')),url=g('url'),ean=g('ean').replace(/\D/g,'');
+    if(!cat||!title||!store||!(old>0)||!(now>0))return setErr(f,t('pub.e.fields'));
+    if(now>=old)return setErr(f,t('pub.e.price'));
+    if(!UI.photo&&!url)return setErr(f,t('pub.e.evid'));
+    let safe=null;if(url){safe=analyzeUrl(url);if(!safe.ok)return setErr(f,t('pub.e.url',{why:urlWhy(safe.flags)}))}
+    if(ean&&!isValidEAN(ean))return setErr(f,t('pub.e.ean'));
+    const o={id:'u'+uid(),cat,title,store,now,old,ean:ean?toEAN13(ean):null,url:safe?safe.url:null,photo:UI.photo,author:'me',ts:Date.now(),up:0,down:0,reports:0,comments:[],history:[{d:0,p:now}]};
+    S.offers.unshift(o);const pts=addKarma('k.publish',15);checkAlertsFor(o);
+    UI.cat=cat;UI.photo=null;UI.draft=null;save();
+    R.tab='home';R.name='home';R.stack=[];go('detail',o.id);toast(t('pub.ok',{n:pts}));
+  },
+  propose:f=>{
+    const name=f.elements.name.value.trim(),why=f.elements.why.value.trim();
+    if(name.length<3)return setErr(f,t('ct.name.e'));
+    const dup=[...S.cats.filter(c=>!c.base).map(c=>c.name),...S.cats.filter(c=>c.base).map(c=>t('cat.'+c.id)),...S.proposals.map(p=>p.name)].some(n=>norm(n)===norm(name));
+    if(dup)return setErr(f,t('ct.dup'));
+    const p={id:'p'+uid(),name,why:why||'—',by:'me',votes:1,created:false};
+    S.proposals.unshift(p);S.user.catVotes[p.id]=1;addKarma('k.propose',5);save();render();toast(t('ct.sent'));
+  },
+  alert:f=>{
+    const kw=f.elements.kw.value.trim(),max=parseFloat(String(f.elements.max.value).replace(',','.'));
+    if(!kw||!(max>0))return setErr(f,t('al.err'));
+    S.alerts.unshift({id:'a'+uid(),kw,max,on:true,seen:[]});save();render();
+  },
+  report:f=>{
+    const id=f.elements.offer.value,reason=f.elements.reason.value,o=byId(id);
+    if(!o)return setErr(f,t('md.pick'));
+    S.reports.unshift({id:uid(),offer:id,reason,detail:f.elements.detail.value.trim().slice(0,200),ts:Date.now()});
+    o.reports=(o.reports||0)+1;
+    if(o.reports>=AUTOHIDE&&!o.hidden){o.hidden=true;pushNotif('n.hide',{title:o.title})}
+    UI.modOffer=null;save();render();toast(t('md.sent'));
+  },
+  link:f=>{const raw=f.elements.u.value.trim();if(!raw){UI.link=null;return render()}const a=analyzeUrl(raw);UI.link={raw,ok:a.ok,flags:a.flags};render()}
+};
+
+/* ================= MODO SERVIDOR: acciones que van a la API ================= */
+function vAuth(){
+  const m=UI.auth||'login';
+  const msg=UI.msg?`<div class="box v-real" style="font-weight:600" role="status">${esc(UI.msg)}</div>`:'';
+  const em=`<div class="field"><label for="au-e">${t('au.email')}</label><input id="au-e" name="email" type="email" class="inp" autocomplete="email" inputmode="email" maxlength="254"></div>`;
+  const pw=(id,ac,lb)=>`<div class="field"><label for="${id}">${lb||t('au.pass')}</label><input id="${id}" name="password" type="password" class="inp" autocomplete="${ac}" maxlength="128"></div>`;
+  const lnk=(mode,txt)=>`<button type="button" class="btn block" data-a="authMode" data-m="${mode}">${txt}</button>`;
+  let body='';
+  if(m==='login')body=`<form data-s="login" class="stack" novalidate>${em}${pw('au-p','current-password')}<p class="err" role="alert"></p><button class="btn primary block">${t('au.login')}</button></form>${lnk('register',t('au.new'))}${lnk('forgot',t('au.forgot'))}`;
+  else if(m==='register')body=`<form data-s="register" class="stack" novalidate>${em}<div class="field"><label for="au-h">${t('au.handle')}</label><input id="au-h" name="handle" class="inp" autocomplete="username" maxlength="20" autocapitalize="none"><p class="note">${t('au.handle.h')}</p></div>${pw('au-p','new-password')}<p class="note">${t('au.pass.h')}</p><p class="err" role="alert"></p><button class="btn primary block">${t('au.register')}</button></form>${lnk('login',t('au.have'))}`;
+  else if(m==='forgot')body=`<form data-s="forgot" class="stack" novalidate>${em}<p class="err" role="alert"></p><button class="btn primary block">${t('au.send')}</button></form>${lnk('login',t('au.back'))}`;
+  else if(m==='reset')body=`<form data-s="reset" class="stack" novalidate><h2 class="lab">${t('au.reset.t')}</h2>${pw('au-p','new-password',t('au.pass.new'))}<p class="note">${t('au.pass.h')}</p><p class="err" role="alert"></p><button class="btn primary block">${t('au.reset.go')}</button></form>`;
+  return `<main class="gut pad stack" style="max-width:480px;margin-inline:auto"><div class="stack" style="gap:6px;padding-top:24px"><h1 class="brand" style="font-size:28px">${logo(44)}Tonalli</h1><p class="note">${t('au.tag')}</p></div>${msg}${body}</main>`;
+}
+function srvBanner(){
+  if(!S.me)return '';
+  return S.me.email_verified?'':`<div class="box v-mild gut stack" style="margin:12px 16px;gap:8px"><p style="font-weight:600">${t('au.unverified')}</p><button class="btn" data-a="resend" style="min-height:40px">${t('au.resend')}</button></div>`;
+}
+async function doScanSrv(raw){
+  raw=String(raw||'').trim();const digits=raw.replace(/\D/g,'');
+  try{
+    if(digits&&digits===raw.replace(/\s/g,'')&&digits.length>=8){
+      const valid=isValidEAN(digits);let list=[];
+      if(valid)list=(await api('GET','/products/'+toEAN13(digits))).items.map(upsert).filter(o=>!o.hidden).sort((a,b)=>a.now-b.now);
+      UI.scan={q:digits,mode:'code',valid,list};
+    }else{
+      let list=[];if(norm(raw).length>=2)list=(await api('GET','/offers?q='+encodeURIComponent(raw.slice(0,60))+'&limit=30')).items.map(upsert).sort((a,b)=>temp(b)-temp(a));
+      UI.scan={q:raw,mode:'text',list};
+    }
+    render();
+  }catch(e){fail(e)}
+}
+if(SRV){
+  const SA={
+    open:el=>{go('detail',el.dataset.id);loadDetail(el.dataset.id)},
+    chart:()=>{go('chart',R.id)},
+    tab:el=>{tab(el.dataset.t);if(el.dataset.t==='home')loadOffers().then(()=>render()).catch(()=>{})},
+    resend:async()=>{try{await api('POST','/auth/resend-verification');toast(t('au.sent'))}catch(e){fail(e)}},
+    authMode:el=>{UI.auth=el.dataset.m;UI.msg='';render(true)},
+    logout:async()=>{try{await api('POST','/auth/logout')}catch(e){}await dropSession()},
+    role:async el=>{try{applyMe(await api('PATCH','/me',{mode:el.dataset.r}));render()}catch(e){fail(e)}},
+    lang:async el=>{S.lang=el.dataset.l;save();render();try{applyMe(await api('PATCH','/me',{lang:S.lang}));render()}catch(e){}},
+    readAll:async()=>{try{await api('POST','/notifications/read');await loadNotifs();render()}catch(e){fail(e)}},
+    vote:async el=>{
+      const o=byId(R.id),val=+el.dataset.v,send=(S.user.voted[o.id]||0)===val?0:val;
+      try{mapOffer(await api('PUT','/offers/'+o.id+'/vote',{value:send}),o);refreshMe();render()}catch(e){fail(e)}
+    },
+    pvote:async el=>{
+      try{await api('PUT','/category-proposals/'+el.dataset.id+'/vote');await Promise.all([loadProps(),loadCats(),refreshMe(),loadNotifs()]);render()}catch(e){fail(e)}
+    },
+    delAlert:async el=>{try{await api('DELETE','/alerts/'+el.dataset.id);await loadAlerts();render()}catch(e){fail(e)}},
+    testAlerts:async()=>{try{const r=await api('POST','/alerts/check');await loadNotifs();render();toast(r.new_notifications?t('al.tested',{n:r.new_notifications}):t('al.none2'))}catch(e){fail(e)}},
+    reset:()=>SA.logout()
+  };
+  const SC={
+    alertOn:async el=>{try{await api('PATCH','/alerts/'+el.dataset.id,{active:el.checked});await loadAlerts()}catch(e){fail(e)}render()}
+  };
+  const SS={
+    scan:f=>doScanSrv(f.elements.q.value),
+    login:async f=>{
+      const email=f.elements.email.value.trim(),password=f.elements.password.value;
+      if(!email||!password)return setErr(f,t('au.err.fields'));
+      busy(f,true);
+      try{
+        setTokens(await api('POST','/auth/login',{email,password,device_name:'Tonalli '+(window.TonalliNative?'Android':'Web')},{anon:true}));
+        await hydrate();UI.msg='';R.name='home';R.tab='home';R.stack=[];render(true);
+      }catch(e){clearTokens();S.me=null;busy(f,false);fail(e,f)}
+    },
+    register:async f=>{
+      const email=f.elements.email.value.trim(),handle=f.elements.handle.value.trim(),password=f.elements.password.value;
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return setErr(f,t('au.err.email'));
+      if(!/^[A-Za-z0-9_.]{3,20}$/.test(handle))return setErr(f,t('au.err.handle'));
+      if([...password].length<15)return setErr(f,t('au.err.pass'));
+      busy(f,true);
+      try{await api('POST','/auth/register',{email,handle,password,lang:S.lang},{anon:true});UI.auth='login';UI.msg=t('au.reg.ok');render(true)}
+      catch(e){busy(f,false);fail(e,f)}
+    },
+    forgot:async f=>{
+      const email=f.elements.email.value.trim();if(!email)return setErr(f,t('au.err.email'));
+      busy(f,true);
+      try{await api('POST','/auth/forgot-password',{email},{anon:true});UI.auth='login';UI.msg=t('au.sent');render(true)}
+      catch(e){busy(f,false);fail(e,f)}
+    },
+    reset:async f=>{
+      const password=f.elements.password.value;if([...password].length<15)return setErr(f,t('au.err.pass'));
+      busy(f,true);
+      try{await api('POST','/auth/reset-password',{token:UI.token,new_password:password},{anon:true});UI.token=null;UI.auth='login';UI.msg=t('au.reset.ok');render(true)}
+      catch(e){busy(f,false);fail(e,f)}
+    },
+    comment:async f=>{
+      const v=f.elements.txt.value.trim();if(!v)return;const o=byId(R.id);busy(f,true);
+      try{const c=await api('POST','/offers/'+o.id+'/comments',{body:v.slice(0,300)});o.comments.push({a:c.author,txt:c.body,ts:Date.parse(c.created_at),me:true});refreshMe();render();const m=document.querySelector('main');if(m)m.scrollTop=m.scrollHeight}
+      catch(e){busy(f,false);fail(e)}
+    },
+    pub:async f=>{
+      const g=n=>f.elements[n].value.trim(),num=s=>parseFloat(String(s).replace(',','.'));
+      const cat=f.elements.cat.value,title=g('title'),store=g('store'),old=num(g('old')),now=num(g('now')),url=g('url'),ean=g('ean').replace(/\D/g,'');
+      if(!cat||!title||!store||!(old>0)||!(now>0))return setErr(f,t('pub.e.fields'));
+      if(now>=old)return setErr(f,t('pub.e.price'));
+      if(!UI.photo&&!url)return setErr(f,t('pub.e.evid'));
+      let safe=null;if(url){safe=analyzeUrl(url);if(!safe.ok)return setErr(f,t('pub.e.url',{why:urlWhy(safe.flags)}))}
+      if(ean&&!isValidEAN(ean))return setErr(f,t('pub.e.ean'));
+      const body={category_id:cat,title,store,price_old_cents:Math.round(old*100),price_now_cents:Math.round(now*100)};
+      if(ean)body.ean=toEAN13(ean);if(safe)body.link_url=safe.url;
+      if(UI.photo)body.photo=UI.photo.replace(/^data:image\/jpeg;base64,/,'');
+      busy(f,true);
+      try{
+        const o=upsert(await api('POST','/offers',body));if(UI.photo)o.photo=UI.photo;
+        UI.cat=cat;UI.photo=null;UI.draft=null;refreshMe();
+        R.tab='home';R.name='home';R.stack=[];go('detail',o.id);loadDetail(o.id);toast(t('pub.ok',{n:15}));
+      }catch(e){busy(f,false);fail(e,f)}
+    },
+    propose:async f=>{
+      const name=f.elements.name.value.trim(),why=f.elements.why.value.trim();
+      if(name.length<3)return setErr(f,t('ct.name.e'));
+      busy(f,true);
+      try{const body={name};if(why)body.why=why;await api('POST','/category-proposals',body);await Promise.all([loadProps(),refreshMe()]);render();toast(t('ct.sent'))}
+      catch(e){busy(f,false);fail(e,f)}
+    },
+    alert:async f=>{
+      const kw=f.elements.kw.value.trim(),max=parseFloat(String(f.elements.max.value).replace(',','.'));
+      if(kw.length<2||!(max>0))return setErr(f,t('al.err'));
+      busy(f,true);
+      try{await api('POST','/alerts',{keyword:kw,max_price_cents:Math.round(max*100)});await loadAlerts();render()}
+      catch(e){busy(f,false);fail(e,f)}
+    },
+    report:async f=>{
+      const id=f.elements.offer.value,reason=f.elements.reason.value,o=byId(id);
+      if(!o)return setErr(f,t('md.pick'));
+      const detail=f.elements.detail.value.trim().slice(0,200),body={reason};if(detail)body.detail=detail;
+      busy(f,true);
+      try{await api('POST','/offers/'+id+'/reports',body);S.reports.unshift({id:uid(),offer:id,reason,ts:Date.now()});UI.modOffer=null;render();toast(t('md.sent'))}
+      catch(e){busy(f,false);fail(e,f)}
+    }
+  };
+  Object.assign(ACT,SA);Object.assign(CHG,SC);Object.assign(SUB,SS);
+}
+/* Arranque. En modo servidor: abre el enlace de confirmación/restablecimiento si viene en la dirección y recupera la sesión. */
+async function boot(){
+  if(!SRV){render(true);return}
+  UI.auth='login';
+  const m=location.hash.match(/^#\/(verify|reset)\/([\w-]{47})$/);
+  if(m){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}}
+  if(m&&m[1]==='verify'){try{await api('POST','/auth/verify-email',{token:m[2]},{anon:true});UI.msg=t('au.verified')}catch(e){UI.msg=errMsg(e)}}
+  if(m&&m[1]==='reset'){UI.auth='reset';UI.token=m[2]}
+  else if(A.rt){try{await refreshTok();await hydrate();R.name='home'}catch(e){if(e.status===0)UI.msg=t('e.net');else clearTokens();S.me=null}}
+  render(true);
+  /* mientras la app está abierta, se traen cada minuto las notificaciones y las ofertas nuevas */
+  setInterval(async()=>{if(!S.me||document.hidden)return;try{await loadNotifs();if(R.name==='home'||R.name==='notif'||R.name==='alerts'){await loadOffers()}render()}catch(e){}},60000);
+}
+
+document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(el&&ACT[el.dataset.a])ACT[el.dataset.a](el,e)});
+document.addEventListener('change',e=>{const el=e.target.closest('[data-c]');if(el&&CHG[el.dataset.c])CHG[el.dataset.c](el,e)});
+document.addEventListener('submit',e=>{const f=e.target.closest('form[data-s]');if(f){e.preventDefault();SUB[f.dataset.s](f)}});
+
+/* Ganchos para la app de Android (MainActivity.kt). En el navegador no se usan. */
+window.onNativeBarcode=code=>{if(R.name!=='scan')tab('scan');doScan(code)};
+window.onNativeScanError=()=>toast(t('sc.noread'));
+window.nativeBack=function(){
+  if(R.stack.length||R.name!==R.tab){back();return true}
+  if(R.tab!=='home'){tab('home');return true}
+  return false;
+};
+
+boot();
+</script>
+</body>
+</html>
