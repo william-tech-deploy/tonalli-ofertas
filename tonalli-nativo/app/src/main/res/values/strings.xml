@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">Tonalli</string>
+    <string name="lema">Ofertas con temperatura real</string>
+    <string name="publicar">Publicar oferta</string>
+    <string name="alertas">Mis alertas</string>
+    <string name="detalle">Detalle de la oferta</string>
+    <string-array name="categorias">
+        <item>Supermercado</item>
+        <item>Tecnología</item>
+        <item>Ropa</item>
+    </string-array>
+    <string-array name="filtro_categorias">
+        <item>Todas</item>
+        <item>Supermercado</item>
+        <item>Tecnología</item>
+        <item>Ropa</item>
+    </string-array>
+</resources>

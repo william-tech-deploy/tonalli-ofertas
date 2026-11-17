@@ -1,0 +1,15 @@
+<resources>
+    <!-- Tema de la marca Tonalli. Sin ActionBar automática: cada pantalla pone su Toolbar. -->
+    <style name="Theme.Tonalli" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/tonalli_primary</item>
+        <item name="colorOnPrimary">@color/tonalli_on_primary</item>
+        <item name="colorPrimaryContainer">@color/tonalli_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/tonalli_on_primary_container</item>
+        <item name="colorSecondary">@color/tonalli_secondary</item>
+        <item name="colorOnSecondary">@color/tonalli_on_secondary</item>
+        <item name="android:colorBackground">@color/tonalli_background</item>
+        <item name="colorSurface">@color/tonalli_surface</item>
+        <item name="colorOnSurface">@color/tonalli_on_surface</item>
+        <item name="android:statusBarColor">@color/brand_tinta</item>
+    </style>
+</resources>

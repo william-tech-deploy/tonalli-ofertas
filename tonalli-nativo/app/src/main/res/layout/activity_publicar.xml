@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/brand_tinta"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/brand_tinta"
+        android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.Material3.Light"
+        app:titleTextColor="@color/brand_papel" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/tonalli_background"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:labelFor="@+id/etTitulo"
+                android:text="Producto"
+                android:textColor="@color/tonalli_on_surface"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/etTitulo"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:hint="Ej.: Arroz blanco 5 lb"
+                android:importantForAutofill="no"
+                android:inputType="textCapSentences"
+                android:maxLength="80"
+                android:textColor="@color/tonalli_on_surface"
+                android:textColorHint="@color/tonalli_on_surface_muted" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:labelFor="@+id/etTienda"
+                android:text="Tienda"
+                android:textColor="@color/tonalli_on_surface"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/etTienda"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:hint="Ej.: Súper Familiar"
+                android:importantForAutofill="no"
+                android:inputType="textCapWords"
+                android:maxLength="50"
+                android:textColor="@color/tonalli_on_surface"
+                android:textColorHint="@color/tonalli_on_surface_muted" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:labelFor="@+id/spCategoria"
+                android:text="Categoría"
+                android:textColor="@color/tonalli_on_surface"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <Spinner
+                android:id="@+id/spCategoria"
+                android:layout_width="match_parent"
+                android:layout_height="52dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:labelFor="@+id/etAntes"
+                android:text="Precio anterior ($)"
+                android:textColor="@color/tonalli_on_surface"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/etAntes"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:hint="Ej.: 3.10"
+                android:importantForAutofill="no"
+                android:inputType="numberDecimal"
+                android:maxLength="9"
+                android:textColor="@color/tonalli_on_surface"
+                android:textColorHint="@color/tonalli_on_surface_muted" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:labelFor="@+id/etAhora"
+                android:text="Precio de oferta ($)"
+                android:textColor="@color/tonalli_on_surface"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/etAhora"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:hint="Ej.: 2.45"
+                android:importantForAutofill="no"
+                android:inputType="numberDecimal"
+                android:maxLength="9"
+                android:textColor="@color/tonalli_on_surface"
+                android:textColorHint="@color/tonalli_on_surface_muted" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swUbicacion"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="12dp"
+                android:text="Guardar mi ubicación como la de la tienda"
+                android:textColor="@color/tonalli_on_surface"
+                android:textSize="15sp" />
+
+            <Button
+                android:id="@+id/btnFoto"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="8dp"
+                android:text="Tomar foto del precio" />
+
+            <ImageView
+                android:id="@+id/ivFoto"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_tarjeta"
+                android:contentDescription="Foto tomada"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvError"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textColor="@color/tonalli_error"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/btnGuardar"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:text="Publicar oferta" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

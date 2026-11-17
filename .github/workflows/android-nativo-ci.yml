@@ -1,0 +1,22 @@
+name: android-nativo-ci
+# Compila la app Android nativa (prototipo 2) y deja el APK de prueba para descargar.
+on:
+  push: { paths: ['tonalli-nativo/**', '.github/workflows/android-nativo-ci.yml'] }
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: tonalli-nativo } }
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '25' }
+      - run: chmod +x gradlew
+      - run: ./gradlew --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tonalli-nativo-debug-apk
+          path: tonalli-nativo/app/build/outputs/apk/debug/*.apk

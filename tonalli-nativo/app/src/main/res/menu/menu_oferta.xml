@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Menú contextual: aparece al mantener presionada una oferta (tema T7). -->
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/ctx_ver" android:title="Ver detalle" />
+    <item android:id="@+id/ctx_compartir" android:title="Compartir" />
+    <item android:id="@+id/ctx_mapa" android:title="Ver tienda en el mapa" />
+    <item android:id="@+id/ctx_eliminar" android:title="Eliminar de este teléfono" />
+</menu>
