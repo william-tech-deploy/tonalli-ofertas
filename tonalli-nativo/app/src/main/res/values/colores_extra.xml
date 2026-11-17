@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Color de cada categoría (igual que la versión web). -->
+    <color name="cat_super">#2A8F61</color>
+    <color name="cat_tech">#2A74CC</color>
+    <color name="cat_ropa">#B93A77</color>
+    <color name="oferta_verde">#1E7D54</color>
+</resources>

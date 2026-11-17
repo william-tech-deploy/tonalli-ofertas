@@ -1,0 +1,34 @@
+name: preparar-fuentes
+# Tarea de una sola vez: baja las tipografías de la marca (licencia OFL) desde npm,
+# las convierte a TTF y las guarda en la app nativa.
+on:
+  push: { paths: ['.github/workflows/fuentes.yml'] }
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fuentes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install fonttools brotli
+      - run: |
+          set -e
+          mkdir -p /tmp/f && cd /tmp/f
+          npm pack @fontsource/plus-jakarta-sans @fontsource/bricolage-grotesque
+          for t in *.tgz; do tar xzf "$t"; mv package "pkg-$t"; done
+          D="$GITHUB_WORKSPACE/tonalli-nativo/app/src/main/res/font"
+          mkdir -p "$D"
+          conv() { python3 -c "import sys;from fontTools.ttLib import TTFont;f=TTFont(sys.argv[1]);f.flavor=None;f.save(sys.argv[2])" "$1" "$2"; }
+          conv pkg-fontsource-plus-jakarta-sans-*/files/plus-jakarta-sans-latin-400-normal.woff "$D/jakarta_regular.ttf"
+          conv pkg-fontsource-plus-jakarta-sans-*/files/plus-jakarta-sans-latin-600-normal.woff "$D/jakarta_semibold.ttf"
+          conv pkg-fontsource-plus-jakarta-sans-*/files/plus-jakarta-sans-latin-700-normal.woff "$D/jakarta_bold.ttf"
+          conv pkg-fontsource-bricolage-grotesque-*/files/bricolage-grotesque-latin-700-normal.woff "$D/bricolage_bold.ttf"
+          conv pkg-fontsource-bricolage-grotesque-*/files/bricolage-grotesque-latin-800-normal.woff "$D/bricolage_extrabold.ttf"
+          ls -la "$D"
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tonalli-nativo/app/src/main/res/font
+          git commit -m "Tipografías de la marca para la app nativa (OFL)" || exit 0
+          git push

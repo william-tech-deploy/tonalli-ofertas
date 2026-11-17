@@ -1,0 +1,52 @@
+name: android-nativo-ci
+# Compila la app Android nativa (prototipo 2) y deja el APK de prueba para descargar.
+on:
+  push: { paths: ['tonalli-nativo/**', '.github/workflows/android-nativo-ci.yml'] }
+  workflow_dispatch:
+permissions:
+  contents: write   # solo para guardar las capturas en la rama ci-capturas
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: tonalli-nativo } }
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '25' }
+      - run: chmod +x gradlew
+      - run: ./gradlew --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tonalli-nativo-debug-apk
+          path: tonalli-nativo/app/build/outputs/apk/debug/*.apk
+      # Prueba de humo: abre las 4 pantallas en un emulador y guarda capturas.
+      - name: Habilitar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: default
+          working-directory: tonalli-nativo
+          script: bash ci/smoke.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capturas-emulador
+          path: tonalli-nativo/capturas/
+      - name: Guardar capturas en la rama ci-capturas
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd capturas || exit 0
+          rm -f logcat.txt
+          git init -q -b ci-capturas
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -q -m "Capturas del emulador"
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" ci-capturas

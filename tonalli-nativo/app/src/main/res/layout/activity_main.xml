@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/tonalli_background"
+    android:orientation="vertical">
+
+    <!-- Barra superior: logo + nombre, y el menú de opciones a la derecha. -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/tonalli_background"
+        app:logo="@drawable/ic_logo"
+        app:titleMarginStart="12dp"
+        app:titleTextAppearance="@style/TonalliTituloBarra" />
+
+    <!-- Pestañas de categoría, como en la versión web. -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabs"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@color/tonalli_background"
+        app:tabGravity="start"
+        app:tabIndicatorColor="@color/tonalli_primary"
+        app:tabIndicatorHeight="3dp"
+        app:tabMode="scrollable"
+        app:tabRippleColor="@color/tonalli_primary_container"
+        app:tabSelectedTextColor="@color/tonalli_on_surface"
+        app:tabTextAppearance="@style/TonalliPestana"
+        app:tabTextColor="@color/tonalli_on_surface_muted" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/tonalli_outline_subtle" />
+
+    <TextView
+        android:id="@+id/tvOrden"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="10dp"
+        android:textColor="@color/tonalli_on_surface_muted"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/tonalli_outline_subtle" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <ListView
+            android:id="@+id/lvOfertas"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:divider="@drawable/linea"
+            android:dividerHeight="1dp"
+            android:footerDividersEnabled="true" />
+
+        <TextView
+            android:id="@+id/tvVacio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:padding="32dp"
+            android:textColor="@color/tonalli_on_surface_muted"
+            android:textSize="16sp"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/tonalli_outline_subtle" />
+
+    <!-- Barra inferior de navegación. -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/nav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/tonalli_surface"
+        app:backgroundTint="@color/tonalli_surface"
+        app:elevation="0dp"
+        app:itemActiveIndicatorStyle="@style/TonalliIndicadorNav"
+        app:itemIconTint="@color/nav_item"
+        app:itemTextColor="@color/nav_item"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/nav_principal" />
+</LinearLayout>

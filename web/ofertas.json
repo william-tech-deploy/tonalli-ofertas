@@ -1,0 +1,11 @@
+{
+  "actualizado": "2026-11-17",
+  "nota": "Datos de ejemplo del servicio web de Tonalli. Tiendas ficticias en Santa Ana, El Salvador.",
+  "ofertas": [
+    {"id": "w1", "titulo": "Aceite vegetal 750 ml", "tienda": "Súper Familiar", "categoria": "Supermercado", "precio_antes": 3.25, "precio_ahora": 2.60, "votos_up": 152, "votos_down": 7, "lat": 13.9942, "lng": -89.5597},
+    {"id": "w2", "titulo": "Frijoles rojos 2 lb", "tienda": "Autoservicio Don Pepe", "categoria": "Supermercado", "precio_antes": 2.40, "precio_ahora": 1.95, "votos_up": 88, "votos_down": 4, "lat": 13.9895, "lng": -89.5561},
+    {"id": "w3", "titulo": "Cargador rápido USB-C 25 W", "tienda": "TecnoPlaza", "categoria": "Tecnología", "precio_antes": 18.00, "precio_ahora": 12.50, "votos_up": 41, "votos_down": 6, "lat": 13.9978, "lng": -89.5632},
+    {"id": "w4", "titulo": "Pantalón de mezclilla", "tienda": "Almacén La Central", "categoria": "Ropa", "precio_antes": 24.00, "precio_ahora": 15.99, "votos_up": 23, "votos_down": 30, "lat": 13.9921, "lng": -89.5548},
+    {"id": "w5", "titulo": "Leche entera 1 litro", "tienda": "Súper Familiar", "categoria": "Supermercado", "precio_antes": 1.60, "precio_ahora": 1.25, "votos_up": 109, "votos_down": 3, "lat": 13.9942, "lng": -89.5597}
+  ]
+}

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="26dp" android:height="30dp" android:viewportWidth="384" android:viewportHeight="440">
+    <group android:translateX="-64" android:translateY="-64">
+        <path android:pathData="M256,140h0a44,44 0 0 1 44,44v162a44,44 0 0 1 -44,44h0a44,44 0 0 1 -44,-44v-162a44,44 0 0 1 44,-44z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear" android:startX="0" android:startY="140" android:endX="0" android:endY="392"
+                    android:startColor="#FFF5A524" android:endColor="#FFE8501F" />
+            </aapt:attr>
+        </path>
+        <path android:pathData="M182,392a74,74 0 1,0 148,0a74,74 0 1,0 -148,0" android:fillColor="#FFE8501F" />
+        <path android:pathData="M132,96h248a44,44 0 0 1 44,44v0a44,44 0 0 1 -44,44h-248a44,44 0 0 1 -44,-44v0a44,44 0 0 1 44,-44z" android:fillColor="@color/tonalli_on_background" />
+    </group>
+</vector>
