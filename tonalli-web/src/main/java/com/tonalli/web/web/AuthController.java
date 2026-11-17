@@ -4,6 +4,7 @@ import com.tonalli.web.dto.RegistroForm;
 import com.tonalli.web.service.UsuarioService;
 import jakarta.validation.Valid;
 import java.nio.charset.StandardCharsets;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -25,8 +26,13 @@ public class AuthController {
         this.usuarios = usuarios;
     }
 
+    /** Con los datos de ejemplo activos, el login muestra los correos de prueba (nunca la contraseña). */
+    @Value("${tonalli.demo.activo:false}")
+    private boolean demoActivo;
+
     @GetMapping("/login")
-    public String login() {
+    public String login(Model model) {
+        model.addAttribute("demoActivo", demoActivo);
         return "login";
     }
 

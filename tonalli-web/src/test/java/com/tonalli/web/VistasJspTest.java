@@ -115,6 +115,68 @@ class VistasJspTest {
     }
 
     @Test
+    void publicarConFotoLaGuardaYLaSirveComoJpeg() throws Exception {
+        HttpClient demo = conSesion("demo@tonalli.local", "DemoClave#2026!");
+        String formulario = paginaConSesion(demo, "/ofertas/nueva");
+        Matcher m = Pattern.compile("name=\"_csrf\" value=\"([^\"]+)\"").matcher(formulario);
+        assertTrue(m.find());
+        assertTrue(formulario.contains("enctype=\"multipart/form-data\""));
+
+        // Una PNG de 1200 × 600 enviada como multipart, igual que la manda el navegador.
+        java.awt.image.BufferedImage png = new java.awt.image.BufferedImage(1200, 600, java.awt.image.BufferedImage.TYPE_INT_RGB);
+        java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+        javax.imageio.ImageIO.write(png, "png", bytes);
+        String limite = "----tonalli" + System.nanoTime();
+        java.io.ByteArrayOutputStream cuerpo = new java.io.ByteArrayOutputStream();
+        String[][] campos = {{"_csrf", m.group(1)}, {"titulo", "Prueba con foto"}, {"tienda", "Tienda de prueba"},
+                {"precio", "10.00"}, {"precioAnterior", ""}, {"enlace", ""}, {"categoriaId", "1"}};
+        for (String[] c : campos) {
+            cuerpo.writeBytes(("--" + limite + "\r\nContent-Disposition: form-data; name=\"" + c[0] + "\"\r\n\r\n"
+                    + c[1] + "\r\n").getBytes(StandardCharsets.UTF_8));
+        }
+        cuerpo.writeBytes(("--" + limite + "\r\nContent-Disposition: form-data; name=\"foto\"; filename=\"foto.png\"\r\n"
+                + "Content-Type: image/png\r\n\r\n").getBytes(StandardCharsets.UTF_8));
+        cuerpo.writeBytes(bytes.toByteArray());
+        cuerpo.writeBytes(("\r\n--" + limite + "--\r\n").getBytes(StandardCharsets.UTF_8));
+
+        HttpResponse<String> envio = demo.send(HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + "/ofertas/nueva"))
+                .header("Content-Type", "multipart/form-data; boundary=" + limite)
+                .POST(HttpRequest.BodyPublishers.ofByteArray(cuerpo.toByteArray())).build(), HttpResponse.BodyHandlers.ofString());
+        assertEquals(302, envio.statusCode(), "Publicar con foto debe redirigir al detalle; respuesta: " + envio.body());
+        String destino = envio.headers().firstValue("Location").orElseThrow();
+        assertTrue(destino.matches(".*/ofertas/\\d+$"), destino);
+
+        String detalle = paginaConSesion(demo, URI.create(destino).getPath());
+        Matcher foto = Pattern.compile("src=\"(/imagenes/\\d+)\"").matcher(detalle);
+        assertTrue(foto.find(), "El detalle debe mostrar la foto subida");
+
+        // La foto se ve también sin sesión, como el catálogo, y siempre como JPEG.
+        HttpResponse<byte[]> img = HttpClient.newHttpClient().send(
+                HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + foto.group(1))).build(),
+                HttpResponse.BodyHandlers.ofByteArray());
+        assertEquals(200, img.statusCode());
+        assertEquals("image/jpeg", img.headers().firstValue("Content-Type").orElse(""));
+        assertEquals((byte) 0xFF, img.body()[0]);
+        assertEquals((byte) 0xD8, img.body()[1]);
+    }
+
+    @Test
+    void elIconoYLasIlustracionesSonPublicos() {
+        assertEquals(HttpStatus.OK, http.getForEntity("/img/favicon.svg", String.class).getStatusCode());
+        assertEquals(HttpStatus.OK, http.getForEntity("/favicon.ico", byte[].class).getStatusCode());
+        String html = pagina("/");
+        assertTrue(html.contains("/img/favicon.svg"), "La cabecera enlaza el ícono de la pestaña");
+        assertTrue(html.contains("/img/categorias/"), "Las ofertas sin foto muestran la ilustración de su categoría");
+    }
+
+    @Test
+    void elLoginEnModoDemoMuestraLosCorreosPeroNoLaContrasena() {
+        String html = pagina("/login");
+        assertTrue(html.contains("ana.martinez@tonalli.local"));
+        assertTrue(!html.contains("DemoClave#2026!"));
+    }
+
+    @Test
     void elMenuSinSesionNoMuestraLosPaneles() {
         String html = pagina("/");
         assertTrue(!html.contains("Mi cuenta") && !html.contains("Administración"),

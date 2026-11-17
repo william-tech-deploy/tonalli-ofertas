@@ -71,7 +71,9 @@ public class SecurityConfig {
                 // la URL pública ya pasó por las reglas de abajo. Sin esta línea, Spring Security 6 trata el
                 // JSP como una página protegida y redirige a /login sin fin (ERR_TOO_MANY_REDIRECTS).
                 .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
-                .requestMatchers("/css/**", "/js/**", "/img/**", "/error", "/error/**").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/img/**", "/favicon.ico", "/error", "/error/**").permitAll()
+                // Fotos de ofertas: públicas como el catálogo; OfertaService.foto decide si la oferta es visible.
+                .requestMatchers(HttpMethod.GET, "/imagenes/{id:\\d+}").permitAll()
                 .requestMatchers("/login", "/registro", "/registro/**", "/verificar").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/", "/ofertas", "/ofertas/{id:\\d+}",

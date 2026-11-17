@@ -34,6 +34,7 @@ CREATE TABLE ofertas (
     precio_centavos           INT          NOT NULL,         -- enteros: sin errores de redondeo
     precio_anterior_centavos  INT          NULL,
     enlace                    VARCHAR(300) NULL,             -- dirección https de la oferta en la tienda
+    imagen_id                 BIGINT       NULL,             -- foto en imagenes_oferta (NULL = ilustración de la categoría)
     estado                    VARCHAR(20)  NOT NULL,         -- ACTIVA | OCULTA | ELIMINADA
     categoria_id              BIGINT       NOT NULL,
     autor_id                  BIGINT       NOT NULL,
@@ -102,3 +103,14 @@ CREATE TABLE alertas (
 ) ENGINE = InnoDB;
 
 INSERT INTO categorias (nombre, base) VALUES ('Supermercado', TRUE), ('Tecnología', TRUE), ('Ropa', TRUE);
+
+-- Fotos de las ofertas, ya re-codificadas como JPEG por ImagenService (sin metadatos EXIF ni GPS).
+-- Tabla aparte para que listar el catálogo nunca lea los bytes de las fotos.
+CREATE TABLE IF NOT EXISTS imagenes_oferta (
+    id         BIGINT AUTO_INCREMENT PRIMARY KEY,
+    oferta_id  BIGINT     NOT NULL UNIQUE,
+    datos      MEDIUMBLOB NOT NULL,
+    ancho      INT        NOT NULL,
+    alto       INT        NOT NULL,
+    CONSTRAINT fk_imagen_oferta FOREIGN KEY (oferta_id) REFERENCES ofertas (id)
+);

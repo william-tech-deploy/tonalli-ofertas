@@ -25,6 +25,9 @@
         <ul class="ofertas">
             <c:forEach var="o" items="${pagina.content}">
                 <li class="oferta">
+                    <%-- Foto subida por el usuario o, si no hay, la ilustración de la categoría (decorativa: alt vacío). --%>
+                    <img class="miniatura" src="<c:url value='${o.imagenUrl}'/>" width="88" height="88" loading="lazy"
+                         alt="<c:out value='${o.tieneFoto ? o.titulo : ""}'/>">
                     <div class="temp ${o.temperatura >= 100 ? 'caliente' : o.temperatura >= 0 ? 'tibia' : 'frio'}"><c:out value="${o.temperatura}"/>°<span class="palabra">${o.temperatura >= 100 ? 'Caliente' : o.temperatura >= 0 ? 'Tibia' : 'Fría'}</span></div>
                     <div class="cuerpo">
                         <h2><a href="<c:url value='/ofertas/${o.id}'/>"><c:out value="${o.titulo}"/></a></h2>

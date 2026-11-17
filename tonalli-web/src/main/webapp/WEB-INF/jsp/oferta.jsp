@@ -5,6 +5,8 @@
 <%@ include file="/WEB-INF/jsp/fragmentos/cabecera.jspf" %>
 
 <article class="detalle">
+    <img class="foto-oferta ${oferta.tieneFoto ? '' : 'ilustracion'}" src="<c:url value='${oferta.imagenUrl}'/>"
+         alt="<c:out value='${oferta.tieneFoto ? "Foto de " += oferta.titulo : ""}'/>">
     <h1><c:out value="${oferta.titulo}"/></h1>
     <p class="meta">
         <c:out value="${oferta.tienda}"/> · <c:out value="${oferta.categoria}"/> ·

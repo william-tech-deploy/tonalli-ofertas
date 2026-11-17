@@ -3,6 +3,7 @@ package com.tonalli.web.service;
 import com.tonalli.web.dto.CategoriaVista;
 import com.tonalli.web.dto.ComentarioVista;
 import com.tonalli.web.dto.Formato;
+import com.tonalli.web.dto.ImagenProcesada;
 import com.tonalli.web.dto.OfertaForm;
 import com.tonalli.web.dto.OfertaVista;
 import com.tonalli.web.exception.OperacionInvalidaException;
@@ -10,6 +11,7 @@ import com.tonalli.web.exception.RecursoNoEncontradoException;
 import com.tonalli.web.model.Categoria;
 import com.tonalli.web.model.Comentario;
 import com.tonalli.web.model.EstadoOferta;
+import com.tonalli.web.model.ImagenOferta;
 import com.tonalli.web.model.MotivoReporte;
 import com.tonalli.web.model.Oferta;
 import com.tonalli.web.model.Reporte;
@@ -17,6 +19,7 @@ import com.tonalli.web.model.Usuario;
 import com.tonalli.web.model.Voto;
 import com.tonalli.web.repository.CategoriaRepository;
 import com.tonalli.web.repository.ComentarioRepository;
+import com.tonalli.web.repository.ImagenOfertaRepository;
 import com.tonalli.web.repository.OfertaRepository;
 import com.tonalli.web.repository.ReporteRepository;
 import com.tonalli.web.repository.UsuarioRepository;
@@ -53,15 +56,33 @@ public class OfertaService {
     private final VotoRepository votos;
     private final ComentarioRepository comentarios;
     private final ReporteRepository reportes;
+    private final ImagenOfertaRepository imagenes;
 
     public OfertaService(OfertaRepository ofertas, CategoriaRepository categorias, UsuarioRepository usuarios,
-                         VotoRepository votos, ComentarioRepository comentarios, ReporteRepository reportes) {
+                         VotoRepository votos, ComentarioRepository comentarios, ReporteRepository reportes,
+                         ImagenOfertaRepository imagenes) {
         this.ofertas = ofertas;
         this.categorias = categorias;
         this.usuarios = usuarios;
         this.votos = votos;
         this.comentarios = comentarios;
         this.reportes = reportes;
+        this.imagenes = imagenes;
+    }
+
+    /**
+     * Bytes de una foto para servirla. Solo si su oferta está activa, o si quien la pide modera (puede ver
+     * ofertas ocultas). Si no, "no encontrada": no se revela que la foto existe.
+     */
+    @Transactional(readOnly = true)
+    public byte[] foto(Long imagenId, boolean esModerador) {
+        ImagenOferta img = imagenes.findById(imagenId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Imagen no encontrada"));
+        EstadoOferta estado = ofertas.findById(img.getOfertaId()).map(Oferta::getEstado).orElse(EstadoOferta.ELIMINADA);
+        if (!(estado == EstadoOferta.ACTIVA || (esModerador && estado == EstadoOferta.OCULTA))) {
+            throw new RecursoNoEncontradoException("Imagen no encontrada");
+        }
+        return img.getDatos();
     }
 
     @Transactional(readOnly = true)
@@ -116,6 +137,12 @@ public class OfertaService {
 
     @Transactional
     public Long crear(Long autorId, OfertaForm form) {
+        return crear(autorId, form, null);
+    }
+
+    /** Publica la oferta y, si viene, su foto ya limpiada por ImagenService. Todo en una sola transacción. */
+    @Transactional
+    public Long crear(Long autorId, OfertaForm form, ImagenProcesada foto) {
         Instant hace24Horas = Instant.now().minus(Duration.ofHours(24));
         if (ofertas.countByAutorIdAndCreadaEnAfter(autorId, hace24Horas) >= MAX_OFERTAS_POR_DIA) {
             throw new OperacionInvalidaException("Alcanzaste el límite de " + MAX_OFERTAS_POR_DIA + " ofertas por día.");
@@ -136,7 +163,12 @@ public class OfertaService {
         o.setEnlace(Formato.enlaceONulo(form.getEnlace()));
         o.setCategoria(categoria);
         o.setAutor(usuarios.getReferenceById(autorId));
-        return ofertas.save(o).getId();
+        Oferta guardada = ofertas.save(o);
+        if (foto != null) {
+            ImagenOferta img = imagenes.save(new ImagenOferta(guardada.getId(), foto.getJpeg(), foto.getAncho(), foto.getAlto()));
+            guardada.setImagenId(img.getId());
+        }
+        return guardada.getId();
     }
 
     /**
@@ -220,7 +252,7 @@ public class OfertaService {
     static OfertaVista vista(Oferta o, long temperatura) {
         return new OfertaVista(o.getId(), o.getTitulo(), o.getTienda(), o.getCategoria().getNombre(),
                 o.getAutor().getNombre(), o.getAutor().getId(), o.getPrecioCentavos(), o.getPrecioAnteriorCentavos(),
-                temperatura, Formato.fecha(o.getCreadaEn()), o.getEstado(), o.getEnlace());
+                temperatura, Formato.fecha(o.getCreadaEn()), o.getEstado(), o.getEnlace(), o.getImagenId());
     }
 
     private Oferta ofertaActiva(Long id) {

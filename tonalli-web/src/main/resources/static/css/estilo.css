@@ -95,7 +95,7 @@ input, select, textarea {
 .ofertas { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .oferta {
     display: grid;
-    grid-template-columns: 72px 1fr auto;
+    grid-template-columns: 88px 72px 1fr auto;
     gap: 16px;
     align-items: center;
     background: var(--tarjeta);
@@ -136,6 +136,12 @@ input, select, textarea {
 .graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 .graficos canvas { max-width: 100%; }
 
+/* Imágenes de las ofertas */
+.miniatura { width: 88px; height: 88px; object-fit: cover; border-radius: 12px; background: #F3E8D8; }
+.foto-oferta { display: block; width: 100%; max-height: 420px; object-fit: contain; border-radius: 12px; background: #F3E8D8; margin-bottom: 16px; }
+.foto-oferta.ilustracion { max-width: 220px; max-height: 220px; }
+.demo code { background: #F3E8D8; border-radius: 4px; padding: 1px 4px; }
+
 /* Paneles de usuario y administrador */
 .perfil { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
 .perfil h2 { margin: 0 0 4px; }
@@ -154,6 +160,7 @@ input, select, textarea {
 .oculto-visual { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 @media (max-width: 600px) {
-    .oferta { grid-template-columns: 56px 1fr; }
+    .oferta { grid-template-columns: 64px 56px 1fr; }
+    .miniatura { width: 64px; height: 64px; }
     .precio { grid-column: 1 / -1; text-align: left; }
 }
