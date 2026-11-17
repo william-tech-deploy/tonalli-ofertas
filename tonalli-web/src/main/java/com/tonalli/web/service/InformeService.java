@@ -142,7 +142,8 @@ public class InformeService {
     private byte[] informeOfertas(Instant desde, Instant hasta, Pageable tope) {
         CsvEscritor csv = new CsvEscritor("Id", "Título", "Tienda", "Categoría", "Precio USD",
                 "Precio anterior USD", "Descuento %", "Estado", "Autor", "Temperatura", "Publicada");
-        for (Object[] f : ofertas.filasInformeOfertas(desde, hasta, tope)) {
+        List<Object[]> filas = ofertas.filasInformeOfertas(desde, hasta, tope);
+        for (Object[] f : filas) {
             int precio = ((Number) f[4]).intValue();
             Integer anterior = f[5] == null ? null : ((Number) f[5]).intValue();
             csv.fila(f[0],
@@ -157,12 +158,14 @@ public class InformeService {
                     f[9] == null ? 0 : f[9],
                     CsvEscritor.fecha((Instant) f[8]));
         }
+        avisarSiSeCorto(csv, filas.size());
         return csv.bytes();
     }
 
     private byte[] informeUsuarios(Instant desde, Instant hasta, Pageable tope) {
         CsvEscritor csv = new CsvEscritor("Id", "Nombre", "Correo", "Rol", "Correo verificado", "Karma", "Registro");
-        for (Object[] f : usuarios.filasInformeUsuarios(desde, hasta, tope)) {
+        List<Object[]> filas = usuarios.filasInformeUsuarios(desde, hasta, tope);
+        for (Object[] f : filas) {
             csv.fila(f[0],
                     f[1],
                     f[2],
@@ -171,18 +174,21 @@ public class InformeService {
                     f[5],
                     CsvEscritor.fecha((Instant) f[6]));
         }
+        avisarSiSeCorto(csv, filas.size());
         return csv.bytes();
     }
 
     private byte[] informeModeracion(Instant desde, Instant hasta, Pageable tope) {
         CsvEscritor csv = new CsvEscritor("Id", "Oferta reportada", "Motivo", "Estado", "Fecha del reporte");
-        for (Object[] f : reportes.filasInformeModeracion(desde, hasta, tope)) {
+        List<Object[]> filas = reportes.filasInformeModeracion(desde, hasta, tope);
+        for (Object[] f : filas) {
             csv.fila(f[0],
                     f[1],
                     ((MotivoReporte) f[2]).getEtiqueta(),
                     ((EstadoReporte) f[3]).name(),
                     CsvEscritor.fecha((Instant) f[4]));
         }
+        avisarSiSeCorto(csv, filas.size());
         return csv.bytes();
     }
 
@@ -225,6 +231,23 @@ public class InformeService {
             grafico.getValue().forEach((rotulo, valor) -> csv.fila(rotulo, valor));
         }
         return csv.bytes();
+    }
+
+    /**
+     * Escribe un aviso al final si el informe llegó al tope de filas.
+     *
+     * <p>Por qué hace falta: el tope protege la memoria del servidor, pero un archivo que se corta en
+     * silencio es peor que un error, porque quien lo recibe lo cree completo y saca conclusiones de datos
+     * incompletos sin saberlo. El aviso va en su propia fila al final, separado por una línea en blanco,
+     * para que no se confunda con un registro.
+     */
+    static void avisarSiSeCorto(CsvEscritor csv, int filasEscritas) {
+        if (filasEscritas < MAX_FILAS) {
+            return;
+        }
+        csv.linea();
+        csv.fila("AVISO: el informe se cortó en " + MAX_FILAS
+                + " filas y puede haber más datos en este periodo. Acota el rango de fechas para verlos.");
     }
 
     /** Porcentaje de descuento con un decimal, o vacío si la oferta no declara precio anterior. */

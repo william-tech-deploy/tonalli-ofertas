@@ -174,6 +174,35 @@ class InformeServiceTest {
         }
     }
 
+    /**
+     * El tope de filas protege la memoria del servidor, pero un archivo que se corta en silencio es peor
+     * que un error: quien lo recibe lo cree completo. Se prueba el aviso con el contador a mano, porque
+     * llenar la base con 5000 ofertas solo para esto haría la prueba lenta sin cubrir nada más.
+     */
+    @Test
+    void siElInformeLlegaAlTopeDeFilasLoAvisaDentroDelArchivo() {
+        CsvEscritor alTope = new CsvEscritor("Id");
+        InformeService.avisarSiSeCorto(alTope, InformeService.MAX_FILAS);
+        String conAviso = new String(alTope.bytes(), StandardCharsets.UTF_8);
+
+        assertTrue(conAviso.contains("AVISO: el informe se cortó en " + InformeService.MAX_FILAS),
+                "El archivo debe decir que está incompleto: " + conAviso);
+
+        CsvEscritor corto = new CsvEscritor("Id");
+        InformeService.avisarSiSeCorto(corto, InformeService.MAX_FILAS - 1);
+        assertFalse(new String(corto.bytes(), StandardCharsets.UTF_8).contains("AVISO"),
+                "Un informe que cabe entero no lleva aviso");
+    }
+
+    @Test
+    void losInformesNormalesNoLlevanElAvisoDeCorte() {
+        for (TipoInforme tipo : TipoInforme.values()) {
+            String contenido = texto(informes.generar(ADMIN, tipo, todoElPeriodo()));
+            assertFalse(contenido.contains("AVISO"),
+                    "Los datos de ejemplo caben de sobra en el tope: " + tipo);
+        }
+    }
+
     @Test
     void losGraficosDevuelvenRotulosEnOrdenYSinHuecos() {
         Map<String, Long> meses = estadisticas.ofertasPorMes();
