@@ -14,8 +14,8 @@
     <!-- Miniatura con el ícono y el color de la categoría -->
     <FrameLayout
         android:id="@+id/miniatura"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:background="@drawable/bg_miniatura">
 
         <ImageView
@@ -62,6 +62,7 @@
 
             <TextView
                 android:id="@+id/tvAhora"
+                android:maxLines="1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@color/tonalli_on_surface"
@@ -70,6 +71,7 @@
 
             <TextView
                 android:id="@+id/tvAntes"
+                android:maxLines="1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
@@ -78,9 +80,10 @@
 
             <TextView
                 android:id="@+id/tvDescuento"
+                android:maxLines="1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="6dp"
                 android:textColor="@color/oferta_verde"
                 android:textSize="13sp"
                 android:textStyle="bold" />
@@ -89,7 +92,7 @@
 
     <!-- Temperatura: ícono, grados y palabra -->
     <LinearLayout
-        android:layout_width="68dp"
+        android:layout_width="62dp"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical">

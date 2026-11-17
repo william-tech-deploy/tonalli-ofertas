@@ -168,15 +168,15 @@
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
-                    <TextView
-                        android:id="@+id/tvVotos"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:textColor="@color/tonalli_on_surface_muted"
-                        android:textSize="13sp" />
                 </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tvVotos"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="@color/tonalli_on_surface_muted"
+                    android:textSize="13sp" />
             </LinearLayout>
 
             <LinearLayout

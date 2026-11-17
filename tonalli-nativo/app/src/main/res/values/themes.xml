@@ -13,6 +13,11 @@
         <item name="android:windowBackground">@color/tonalli_background</item>
         <item name="colorSurface">@color/tonalli_surface</item>
         <item name="colorOnSurface">@color/tonalli_on_surface</item>
+        <!-- Menús y diálogos en blanco, sin el tinte lila por defecto de Material -->
+        <item name="colorSurfaceContainer">@color/tonalli_surface</item>
+        <item name="colorSurfaceContainerHigh">@color/tonalli_surface</item>
+        <item name="colorSurfaceContainerHighest">@color/tonalli_surface_variant</item>
+        <item name="colorSurfaceContainerLow">@color/tonalli_surface</item>
         <!-- Tipografía de la marca en toda la app -->
         <item name="android:fontFamily">@font/jakarta</item>
         <item name="fontFamily">@font/jakarta</item>
