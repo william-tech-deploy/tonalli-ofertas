@@ -11,5 +11,7 @@ public interface PropuestaRepository extends JpaRepository<Propuesta, Long> {
     @EntityGraph(attributePaths = "autor")
     List<Propuesta> findByEstadoOrderByCreadaEnDesc(EstadoPropuesta estado);
 
+    long countByEstado(EstadoPropuesta estado);
+
     long countByAutorIdAndEstado(Long autorId, EstadoPropuesta estado);
 }

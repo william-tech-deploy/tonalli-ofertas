@@ -26,4 +26,15 @@
 </form>
 <p>¿No tienes cuenta? <a href="<c:url value='/registro'/>">Regístrate</a>.</p>
 
+<c:if test="${demoActivo}">
+    <%-- Solo con TONALLI_DEMO=true. Muestra los correos de prueba, nunca la contraseña. --%>
+    <section class="tarjeta demo">
+        <h2>Modo demostración</h2>
+        <p>Usuarios de ejemplo: <code>demo@tonalli.local</code>, <code>ana.martinez@tonalli.local</code>,
+            <code>carlos.rivas@tonalli.local</code>, <code>sofia.hernandez@tonalli.local</code> y
+            <code>diego.flores@tonalli.local</code>.</p>
+        <p class="meta">Todos usan la misma contraseña: la variable <code>TONALLI_DEMO_PASSWORD</code> del archivo <code>.env</code>.</p>
+    </section>
+</c:if>
+
 <%@ include file="/WEB-INF/jsp/fragmentos/pie.jspf" %>

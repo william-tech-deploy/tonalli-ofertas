@@ -2,14 +2,19 @@ package com.tonalli.web.service;
 
 import com.tonalli.web.dto.CategoriaVista;
 import com.tonalli.web.dto.ComentarioVista;
+import com.tonalli.web.dto.FiltroOfertas;
 import com.tonalli.web.dto.Formato;
+import com.tonalli.web.dto.ImagenProcesada;
 import com.tonalli.web.dto.OfertaForm;
 import com.tonalli.web.dto.OfertaVista;
+import com.tonalli.web.dto.OrdenOferta;
+import com.tonalli.web.dto.TemperaturaFiltro;
 import com.tonalli.web.exception.OperacionInvalidaException;
 import com.tonalli.web.exception.RecursoNoEncontradoException;
 import com.tonalli.web.model.Categoria;
 import com.tonalli.web.model.Comentario;
 import com.tonalli.web.model.EstadoOferta;
+import com.tonalli.web.model.ImagenOferta;
 import com.tonalli.web.model.MotivoReporte;
 import com.tonalli.web.model.Oferta;
 import com.tonalli.web.model.Reporte;
@@ -17,6 +22,7 @@ import com.tonalli.web.model.Usuario;
 import com.tonalli.web.model.Voto;
 import com.tonalli.web.repository.CategoriaRepository;
 import com.tonalli.web.repository.ComentarioRepository;
+import com.tonalli.web.repository.ImagenOfertaRepository;
 import com.tonalli.web.repository.OfertaRepository;
 import com.tonalli.web.repository.ReporteRepository;
 import com.tonalli.web.repository.UsuarioRepository;
@@ -53,15 +59,33 @@ public class OfertaService {
     private final VotoRepository votos;
     private final ComentarioRepository comentarios;
     private final ReporteRepository reportes;
+    private final ImagenOfertaRepository imagenes;
 
     public OfertaService(OfertaRepository ofertas, CategoriaRepository categorias, UsuarioRepository usuarios,
-                         VotoRepository votos, ComentarioRepository comentarios, ReporteRepository reportes) {
+                         VotoRepository votos, ComentarioRepository comentarios, ReporteRepository reportes,
+                         ImagenOfertaRepository imagenes) {
         this.ofertas = ofertas;
         this.categorias = categorias;
         this.usuarios = usuarios;
         this.votos = votos;
         this.comentarios = comentarios;
         this.reportes = reportes;
+        this.imagenes = imagenes;
+    }
+
+    /**
+     * Bytes de una foto para servirla. Solo si su oferta está activa, o si quien la pide modera (puede ver
+     * ofertas ocultas). Si no, "no encontrada": no se revela que la foto existe.
+     */
+    @Transactional(readOnly = true)
+    public byte[] foto(Long imagenId, boolean esModerador) {
+        ImagenOferta img = imagenes.findById(imagenId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Imagen no encontrada"));
+        EstadoOferta estado = ofertas.findById(img.getOfertaId()).map(Oferta::getEstado).orElse(EstadoOferta.ELIMINADA);
+        if (!(estado == EstadoOferta.ACTIVA || (esModerador && estado == EstadoOferta.OCULTA))) {
+            throw new RecursoNoEncontradoException("Imagen no encontrada");
+        }
+        return img.getDatos();
     }
 
     @Transactional(readOnly = true)
@@ -71,14 +95,47 @@ public class OfertaService {
                 .toList();
     }
 
+    /** Búsqueda simple, sin filtros: la usan la API y las alertas. */
     @Transactional(readOnly = true)
     public Page<OfertaVista> listar(String q, Long categoriaId, int pagina) {
-        String busqueda = Formato.limpiarBusqueda(q);
-        Pageable pageable = PageRequest.of(Math.min(Math.max(pagina, 0), MAX_PAGINA), TAMANO_PAGINA,
-                Sort.by(Sort.Direction.DESC, "creadaEn"));
-        Page<Oferta> resultado = categoriaId == null
-                ? ofertas.buscar(EstadoOferta.ACTIVA, busqueda, pageable)
-                : ofertas.buscarPorCategoria(EstadoOferta.ACTIVA, categoriaId, busqueda, pageable);
+        FiltroOfertas filtro = new FiltroOfertas();
+        filtro.setQ(q);
+        filtro.setCategoriaId(categoriaId);
+        filtro.setPagina(pagina);
+        return listar(filtro);
+    }
+
+    /**
+     * Catálogo con los filtros del buscador. Aquí se normaliza todo lo que escribió la persona:
+     * la búsqueda pierde los comodines de LIKE, los precios pasan a centavos y se ordenan si vienen al revés,
+     * y la página se recorta a un rango sano. El repositorio solo recibe valores ya limpios.
+     */
+    @Transactional(readOnly = true)
+    public Page<OfertaVista> listar(FiltroOfertas filtro) {
+        String busqueda = Formato.limpiarBusqueda(filtro.getQ());
+        int precioMin = filtro.getPrecioMin() == null ? 0 : Math.max(0, Formato.centavos(filtro.getPrecioMin()));
+        int precioMax = filtro.getPrecioMax() == null ? Integer.MAX_VALUE
+                : Math.max(0, Formato.centavos(filtro.getPrecioMax()));
+        if (precioMin > precioMax) { // "de 50 a 10": se entiende como "de 10 a 50" en vez de no devolver nada
+            int intercambio = precioMin;
+            precioMin = precioMax;
+            precioMax = intercambio;
+        }
+        Boolean conDescuento = filtro.isSoloConDescuento() ? Boolean.TRUE : null;
+        TemperaturaFiltro temp = filtro.getTemperatura();
+        int pagina = Math.min(Math.max(filtro.getPagina(), 0), MAX_PAGINA);
+
+        Page<Oferta> resultado = switch (filtro.getOrden()) {
+            case TEMPERATURA -> ofertas.buscarPorTemperatura(EstadoOferta.ACTIVA, busqueda, filtro.getCategoriaId(),
+                    precioMin, precioMax, conDescuento, temp.getMinimo(), temp.getMaximo(),
+                    PageRequest.of(pagina, TAMANO_PAGINA));
+            case DESCUENTO -> ofertas.buscarPorDescuento(EstadoOferta.ACTIVA, busqueda, filtro.getCategoriaId(),
+                    precioMin, precioMax, conDescuento, temp.getMinimo(), temp.getMaximo(),
+                    PageRequest.of(pagina, TAMANO_PAGINA));
+            default -> ofertas.buscarConFiltros(EstadoOferta.ACTIVA, busqueda, filtro.getCategoriaId(),
+                    precioMin, precioMax, conDescuento, temp.getMinimo(), temp.getMaximo(),
+                    PageRequest.of(pagina, TAMANO_PAGINA, ordenSimple(filtro.getOrden())));
+        };
 
         List<Long> ids = resultado.getContent().stream().map(Oferta::getId).toList();
         Map<Long, Long> temperaturas = new HashMap<>();
@@ -88,6 +145,15 @@ public class OfertaService {
             }
         }
         return resultado.map(o -> vista(o, temperaturas.getOrDefault(o.getId(), 0L)));
+    }
+
+    /** Orden por una columna de la tabla. La temperatura y el descuento no lo son: tienen su propia consulta. */
+    private static Sort ordenSimple(OrdenOferta orden) {
+        return switch (orden) {
+            case PRECIO_ASC -> Sort.by(Sort.Direction.ASC, "precioCentavos");
+            case PRECIO_DESC -> Sort.by(Sort.Direction.DESC, "precioCentavos");
+            default -> Sort.by(Sort.Direction.DESC, "creadaEn");
+        };
     }
 
     /**
@@ -116,6 +182,12 @@ public class OfertaService {
 
     @Transactional
     public Long crear(Long autorId, OfertaForm form) {
+        return crear(autorId, form, null);
+    }
+
+    /** Publica la oferta y, si viene, su foto ya limpiada por ImagenService. Todo en una sola transacción. */
+    @Transactional
+    public Long crear(Long autorId, OfertaForm form, ImagenProcesada foto) {
         Instant hace24Horas = Instant.now().minus(Duration.ofHours(24));
         if (ofertas.countByAutorIdAndCreadaEnAfter(autorId, hace24Horas) >= MAX_OFERTAS_POR_DIA) {
             throw new OperacionInvalidaException("Alcanzaste el límite de " + MAX_OFERTAS_POR_DIA + " ofertas por día.");
@@ -133,9 +205,15 @@ public class OfertaService {
         o.setTienda(Formato.limpiarTexto(form.getTienda()));
         o.setPrecioCentavos(precio);
         o.setPrecioAnteriorCentavos(anterior);
+        o.setEnlace(Formato.enlaceONulo(form.getEnlace()));
         o.setCategoria(categoria);
         o.setAutor(usuarios.getReferenceById(autorId));
-        return ofertas.save(o).getId();
+        Oferta guardada = ofertas.save(o);
+        if (foto != null) {
+            ImagenOferta img = imagenes.save(new ImagenOferta(guardada.getId(), foto.getJpeg(), foto.getAncho(), foto.getAlto()));
+            guardada.setImagenId(img.getId());
+        }
+        return guardada.getId();
     }
 
     /**
@@ -209,7 +287,7 @@ public class OfertaService {
     }
 
     /** Peso del voto según la karma del votante: 1 (nuevo), 2 (desde 10) o 3 (desde 50). */
-    static int pesoPorKarma(int karma) {
+    public static int pesoPorKarma(int karma) {
         if (karma >= 50) {
             return 3;
         }
@@ -219,7 +297,7 @@ public class OfertaService {
     static OfertaVista vista(Oferta o, long temperatura) {
         return new OfertaVista(o.getId(), o.getTitulo(), o.getTienda(), o.getCategoria().getNombre(),
                 o.getAutor().getNombre(), o.getAutor().getId(), o.getPrecioCentavos(), o.getPrecioAnteriorCentavos(),
-                temperatura, Formato.fecha(o.getCreadaEn()), o.getEstado());
+                temperatura, Formato.fecha(o.getCreadaEn()), o.getEstado(), o.getEnlace(), o.getImagenId());
     }
 
     private Oferta ofertaActiva(Long id) {

@@ -7,6 +7,7 @@ import com.tonalli.web.exception.OperacionInvalidaException;
 import com.tonalli.web.model.MotivoReporte;
 import com.tonalli.web.model.Rol;
 import com.tonalli.web.security.UsuarioActual;
+import com.tonalli.web.service.ImagenService;
 import com.tonalli.web.service.OfertaService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
@@ -28,9 +30,11 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class OfertaController {
 
     private final OfertaService ofertas;
+    private final ImagenService imagenes;
 
-    public OfertaController(OfertaService ofertas) {
+    public OfertaController(OfertaService ofertas, ImagenService imagenes) {
         this.ofertas = ofertas;
+        this.imagenes = imagenes;
     }
 
     @GetMapping("/ofertas/{id}")
@@ -53,10 +57,12 @@ public class OfertaController {
 
     @PostMapping("/ofertas/nueva")
     public String crear(@Valid @ModelAttribute("form") OfertaForm form, BindingResult errores,
+                        @RequestParam(value = "foto", required = false) MultipartFile foto,
                         @AuthenticationPrincipal UsuarioActual usuario, Model model) {
         if (!errores.hasErrors()) {
             try {
-                Long id = ofertas.crear(usuario.getId(), form);
+                // La foto se valida y re-codifica antes de abrir la transacción: si es inválida no se guarda nada.
+                Long id = ofertas.crear(usuario.getId(), form, imagenes.procesar(foto));
                 return "redirect:/ofertas/" + id;
             } catch (OperacionInvalidaException e) {
                 model.addAttribute("error", e.getMessage());

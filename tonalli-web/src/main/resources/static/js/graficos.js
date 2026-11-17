@@ -5,6 +5,20 @@
  *
  * Seguridad: los datos llegan de /api/estadisticas/** (solo ADMIN) y se pintan con textContent y
  * fillText, nunca con innerHTML, así que un nombre de categoría con HTML no se ejecuta.
+ *
+ * Cómo se usa: el archivo no conoce ningún gráfico en concreto. Al cargar recorre todos los
+ * <canvas data-url> de la página y pinta cada uno según sus atributos:
+ *
+ *   data-url     dirección de la API que devuelve {"rótulo": número, ...}
+ *   data-tipo    "barras" (por omisión) o "pastel"
+ *   data-tabla   id de la tabla que recibe los mismos datos en texto
+ *   data-sufijo  unidad que se agrega al valor en las barras y en la tabla, por ejemplo "%" (opcional;
+ *                el pastel no lo usa porque su leyenda ya muestra el porcentaje del total)
+ *
+ * Por qué así y no una llamada por gráfico: agregar un gráfico a la página pasó a ser agregar un
+ * <canvas> en la JSP, sin tocar este archivo. La tabla no es un adorno: un <canvas> es una imagen y un
+ * lector de pantalla no puede leerlo, así que cada gráfico lleva al lado los mismos datos en una tabla
+ * (misma información por dos vías, como pide la pauta WCAG 1.1.1).
  */
 (function () {
     'use strict';
@@ -53,7 +67,7 @@
         lienzo.ctx.fillText('Sin datos todavía', lienzo.ancho / 2, lienzo.alto / 2);
     }
 
-    function barras(canvas, etiquetas, valores) {
+    function barras(canvas, etiquetas, valores, sufijo) {
         var lienzo = preparar(canvas);
         var ctx = lienzo.ctx;
         var maximo = Math.max.apply(null, valores.concat([0]));
@@ -91,7 +105,7 @@
             ctx.fillStyle = '#14213D';
             ctx.textAlign = 'center';
             ctx.font = '13px sans-serif';
-            ctx.fillText(String(valores[i]), x + anchoBarra / 2, arriba + areaAlto - alto - 6);
+            ctx.fillText(valores[i] + sufijo, x + anchoBarra / 2, arriba + areaAlto - alto - 6);
             ctx.font = '12px sans-serif';
             ctx.fillStyle = '#4A5877';
             ctx.fillText(recortar(ctx, etiquetas[i], ranura - 4), izquierda + ranura * i + ranura / 2, arriba + areaAlto + 18);
@@ -136,7 +150,10 @@
         }
     }
 
-    function llenarTabla(idTabla, etiquetas, valores) {
+    function llenarTabla(idTabla, etiquetas, valores, sufijo) {
+        if (!idTabla) {
+            return;
+        }
         var cuerpo = document.querySelector('#' + idTabla + ' tbody');
         if (!cuerpo) {
             return;
@@ -149,18 +166,16 @@
             var celdaNombre = document.createElement('td');
             var celdaValor = document.createElement('td');
             celdaNombre.textContent = etiquetas[i];
-            celdaValor.textContent = String(valores[i]);
+            celdaValor.textContent = valores[i] + sufijo;
             fila.appendChild(celdaNombre);
             fila.appendChild(celdaValor);
             cuerpo.appendChild(fila);
         }
     }
 
-    function iniciar(idCanvas, idTabla) {
-        var canvas = document.getElementById(idCanvas);
-        if (!canvas) {
-            return;
-        }
+    function iniciar(canvas) {
+        var idTabla = canvas.getAttribute('data-tabla');
+        var sufijo = canvas.getAttribute('data-sufijo') || '';
         obtener(canvas.getAttribute('data-url'))
             .then(function (datos) {
                 var etiquetas = Object.keys(datos);
@@ -168,11 +183,13 @@
                 if (canvas.getAttribute('data-tipo') === 'pastel') {
                     pastel(canvas, etiquetas, valores);
                 } else {
-                    barras(canvas, etiquetas, valores);
+                    barras(canvas, etiquetas, valores, sufijo);
                 }
-                llenarTabla(idTabla, etiquetas, valores);
+                llenarTabla(idTabla, etiquetas, valores, sufijo);
             })
             .catch(function () {
+                // Un gráfico que falla no debe dejar un hueco en blanco: se reemplaza por el aviso y los
+                // demás siguen pintándose, porque cada canvas tiene su propia promesa.
                 var aviso = document.createElement('p');
                 aviso.className = 'aviso error';
                 aviso.textContent = 'No se pudieron cargar los datos del gráfico.';
@@ -180,6 +197,8 @@
             });
     }
 
-    iniciar('grafico-categorias', 'tabla-categorias');
-    iniciar('grafico-reportes', 'tabla-reportes');
+    var lienzos = document.querySelectorAll('canvas[data-url]');
+    for (var i = 0; i < lienzos.length; i++) {
+        iniciar(lienzos[i]);
+    }
 })();

@@ -5,6 +5,7 @@
 <c:set var="titulo" value="Categorías" scope="request"/>
 <%@ include file="/WEB-INF/jsp/fragmentos/cabecera.jspf" %>
 
+<p class="meta"><a href="<c:url value='/admin'/>">← Administración</a></p>
 <h1>Categorías</h1>
 
 <form:form cssClass="formulario" method="post" modelAttribute="form" servletRelativeAction="/admin/categorias">

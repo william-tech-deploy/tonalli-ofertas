@@ -41,6 +41,14 @@ public class Oferta {
     @Column(name = "precio_anterior_centavos")
     private Integer precioAnteriorCentavos;
 
+    /** Dirección pública de la oferta en la tienda (opcional). Solo se aceptan enlaces https. */
+    @Column(length = 300)
+    private String enlace;
+
+    /** Id de su foto en la tabla imagenes_oferta, o null si no tiene (se muestra la ilustración de la categoría). */
+    @Column(name = "imagen_id")
+    private Long imagenId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private EstadoOferta estado = EstadoOferta.ACTIVA;
@@ -65,6 +73,10 @@ public class Oferta {
     public void setPrecioCentavos(int precioCentavos) { this.precioCentavos = precioCentavos; }
     public Integer getPrecioAnteriorCentavos() { return precioAnteriorCentavos; }
     public void setPrecioAnteriorCentavos(Integer precioAnteriorCentavos) { this.precioAnteriorCentavos = precioAnteriorCentavos; }
+    public String getEnlace() { return enlace; }
+    public Long getImagenId() { return imagenId; }
+    public void setImagenId(Long imagenId) { this.imagenId = imagenId; }
+    public void setEnlace(String enlace) { this.enlace = enlace; }
     public EstadoOferta getEstado() { return estado; }
     public void setEstado(EstadoOferta estado) { this.estado = estado; }
     public Categoria getCategoria() { return categoria; }

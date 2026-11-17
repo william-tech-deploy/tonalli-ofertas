@@ -41,6 +41,15 @@ public final class Formato {
         return limpio.length() > 60 ? limpio.substring(0, 60) : limpio;
     }
 
+    /** Enlace opcional: recorta espacios y convierte el texto vacío en null (la columna queda sin valor). */
+    public static String enlaceONulo(String enlace) {
+        if (enlace == null) {
+            return null;
+        }
+        String limpio = enlace.trim();
+        return limpio.isEmpty() ? null : limpio;
+    }
+
     /** Recorta espacios y elimina caracteres de control (excepto salto de línea) de un texto libre. */
     public static String limpiarTexto(String texto) {
         if (texto == null) {

@@ -22,10 +22,19 @@ public class OfertaVista {
     private final long temperatura;
     private final String creada;
     private final EstadoOferta estado;
+    private final String enlace;
+    private final Long imagenId;
 
     public OfertaVista(Long id, String titulo, String tienda, String categoria, String autor, Long autorId,
                        int precioCentavos, Integer precioAnteriorCentavos, long temperatura,
                        String creada, EstadoOferta estado) {
+        this(id, titulo, tienda, categoria, autor, autorId, precioCentavos, precioAnteriorCentavos, temperatura,
+                creada, estado, null, null);
+    }
+
+    public OfertaVista(Long id, String titulo, String tienda, String categoria, String autor, Long autorId,
+                       int precioCentavos, Integer precioAnteriorCentavos, long temperatura,
+                       String creada, EstadoOferta estado, String enlace, Long imagenId) {
         this.id = id;
         this.titulo = titulo;
         this.tienda = tienda;
@@ -42,6 +51,8 @@ public class OfertaVista {
         this.temperatura = temperatura;
         this.creada = creada;
         this.estado = estado;
+        this.enlace = enlace;
+        this.imagenId = imagenId;
     }
 
     public Long getId() { return id; }
@@ -56,4 +67,23 @@ public class OfertaVista {
     public long getTemperatura() { return temperatura; }
     public String getCreada() { return creada; }
     public EstadoOferta getEstado() { return estado; }
+    public String getEnlace() { return enlace; }
+    public Long getImagenId() { return imagenId; }
+    public boolean isTieneFoto() { return imagenId != null; }
+
+    /**
+     * Ruta de la imagen que se muestra: la foto subida o, si no hay, la ilustración de su categoría.
+     * Las categorías creadas por votación usan una ilustración genérica.
+     */
+    public String getImagenUrl() {
+        if (imagenId != null) {
+            return "/imagenes/" + imagenId;
+        }
+        String clave = java.text.Normalizer.normalize(categoria == null ? "" : categoria, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").toLowerCase(java.util.Locale.ROOT);
+        return switch (clave) {
+            case "supermercado", "tecnologia", "ropa" -> "/img/categorias/" + clave + ".svg";
+            default -> "/img/categorias/otra.svg";
+        };
+    }
 }

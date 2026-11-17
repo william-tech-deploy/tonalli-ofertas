@@ -1,3 +1,5 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Cada archivo JSP se lee con SU propia codificación: sin esta línea, Tomcat lee este fragmento como ISO-8859-1 y rompe los acentos. --%>
 <fmt:setLocale value="en_US" scope="request"/>
 <!DOCTYPE html>
 <html lang="es">
@@ -6,6 +8,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><c:out value="${titulo}"/> · Tonalli</title>
 <meta name="theme-color" content="#14213D">
+<%-- Ícono de la pestaña: SVG para navegadores actuales, PNG y .ico para los demás, y el de pantalla de inicio en iPhone. --%>
+<link rel="icon" href="<c:url value='/img/favicon.svg'/>" type="image/svg+xml">
+<link rel="icon" href="<c:url value='/img/favicon-32.png'/>" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="<c:url value='/img/apple-touch-icon.png'/>">
 <link rel="stylesheet" href="<c:url value='/css/estilo.css'/>">
 </head>
 <body>
@@ -15,15 +21,12 @@
         <a href="<c:url value='/'/>">Ofertas</a>
         <c:if test="${pageContext.request.userPrincipal != null}">
             <a href="<c:url value='/ofertas/nueva'/>">Publicar</a>
-            <a href="<c:url value='/alertas'/>">Alertas</a>
-            <a href="<c:url value='/propuestas'/>">Propuestas</a>
+            <a href="<c:url value='/cuenta'/>">Mi cuenta</a>
             <c:if test="${pageContext.request.isUserInRole('MODERADOR') or pageContext.request.isUserInRole('ADMIN')}">
                 <a href="<c:url value='/moderacion'/>">Moderación</a>
             </c:if>
             <c:if test="${pageContext.request.isUserInRole('ADMIN')}">
-                <a href="<c:url value='/admin/usuarios'/>">Usuarios</a>
-                <a href="<c:url value='/admin/categorias'/>">Categorías</a>
-                <a href="<c:url value='/admin/graficos'/>">Gráficos</a>
+                <a href="<c:url value='/admin'/>">Administración</a>
             </c:if>
         </c:if>
     </nav>
@@ -31,6 +34,12 @@
         <c:choose>
             <c:when test="${pageContext.request.userPrincipal != null}">
                 <span class="usuario"><c:out value="${pageContext.request.remoteUser}"/></span>
+                <%-- Distintivo de rol: el usuario sabe con qué permisos está navegando. Solo informa; los permisos
+                     reales los decide SecurityConfig en el servidor. --%>
+                <c:choose>
+                    <c:when test="${pageContext.request.isUserInRole('ADMIN')}"><span class="chip-rol rol-ADMIN">Administrador</span></c:when>
+                    <c:when test="${pageContext.request.isUserInRole('MODERADOR')}"><span class="chip-rol rol-MODERADOR">Moderador</span></c:when>
+                </c:choose>
                 <form method="post" action="<c:url value='/logout'/>" class="en-linea">
                     <input type="hidden" name="<c:out value='${_csrf.parameterName}'/>" value="<c:out value='${_csrf.token}'/>">
                     <button type="submit" class="enlace">Salir</button>

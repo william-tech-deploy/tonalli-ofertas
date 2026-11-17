@@ -3,17 +3,21 @@ package com.tonalli.web.service;
 import com.tonalli.web.dto.CategoriaVista;
 import com.tonalli.web.dto.Formato;
 import com.tonalli.web.dto.PropuestaVista;
+import com.tonalli.web.dto.ResumenAdmin;
 import com.tonalli.web.dto.UsuarioVista;
 import com.tonalli.web.exception.OperacionInvalidaException;
 import com.tonalli.web.exception.RecursoNoEncontradoException;
 import com.tonalli.web.model.Categoria;
+import com.tonalli.web.model.EstadoOferta;
 import com.tonalli.web.model.EstadoPropuesta;
+import com.tonalli.web.model.EstadoReporte;
 import com.tonalli.web.model.Propuesta;
 import com.tonalli.web.model.Rol;
 import com.tonalli.web.model.Usuario;
 import com.tonalli.web.repository.CategoriaRepository;
 import com.tonalli.web.repository.OfertaRepository;
 import com.tonalli.web.repository.PropuestaRepository;
+import com.tonalli.web.repository.ReporteRepository;
 import com.tonalli.web.repository.UsuarioRepository;
 import com.tonalli.web.security.UsuarioActual;
 import java.util.List;
@@ -38,15 +42,30 @@ public class AdminService {
     private final CategoriaRepository categorias;
     private final OfertaRepository ofertas;
     private final PropuestaRepository propuestas;
+    private final ReporteRepository reportes;
     private final SessionRegistry sesiones;
 
     public AdminService(UsuarioRepository usuarios, CategoriaRepository categorias, OfertaRepository ofertas,
-                        PropuestaRepository propuestas, SessionRegistry sesiones) {
+                        PropuestaRepository propuestas, ReporteRepository reportes, SessionRegistry sesiones) {
         this.usuarios = usuarios;
         this.categorias = categorias;
         this.ofertas = ofertas;
         this.propuestas = propuestas;
+        this.reportes = reportes;
         this.sesiones = sesiones;
+    }
+
+    /** Cifras del panel de inicio. Son conteos en la base: no se carga ningún registro completo. */
+    @Transactional(readOnly = true)
+    public ResumenAdmin resumen() {
+        return new ResumenAdmin(
+                usuarios.count(),
+                usuarios.countByRol(Rol.MODERADOR),
+                usuarios.countByRol(Rol.ADMIN),
+                ofertas.countByEstado(EstadoOferta.ACTIVA),
+                ofertas.countByEstado(EstadoOferta.OCULTA),
+                reportes.countByEstado(EstadoReporte.ABIERTO),
+                propuestas.countByEstado(EstadoPropuesta.PENDIENTE));
     }
 
     @Transactional(readOnly = true)
