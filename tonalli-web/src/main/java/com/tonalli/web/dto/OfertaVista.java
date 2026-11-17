@@ -22,10 +22,18 @@ public class OfertaVista {
     private final long temperatura;
     private final String creada;
     private final EstadoOferta estado;
+    private final String enlace;
 
     public OfertaVista(Long id, String titulo, String tienda, String categoria, String autor, Long autorId,
                        int precioCentavos, Integer precioAnteriorCentavos, long temperatura,
                        String creada, EstadoOferta estado) {
+        this(id, titulo, tienda, categoria, autor, autorId, precioCentavos, precioAnteriorCentavos, temperatura,
+                creada, estado, null);
+    }
+
+    public OfertaVista(Long id, String titulo, String tienda, String categoria, String autor, Long autorId,
+                       int precioCentavos, Integer precioAnteriorCentavos, long temperatura,
+                       String creada, EstadoOferta estado, String enlace) {
         this.id = id;
         this.titulo = titulo;
         this.tienda = tienda;
@@ -42,6 +50,7 @@ public class OfertaVista {
         this.temperatura = temperatura;
         this.creada = creada;
         this.estado = estado;
+        this.enlace = enlace;
     }
 
     public Long getId() { return id; }
@@ -56,4 +65,5 @@ public class OfertaVista {
     public long getTemperatura() { return temperatura; }
     public String getCreada() { return creada; }
     public EstadoOferta getEstado() { return estado; }
+    public String getEnlace() { return enlace; }
 }

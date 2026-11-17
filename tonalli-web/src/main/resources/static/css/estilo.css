@@ -67,6 +67,9 @@ button, .boton {
     padding: 8px 16px;
     cursor: pointer;
 }
+/* Enlace a la tienda en el detalle de una oferta: se ve como botón, pero es un enlace. */
+a.boton-tienda { display: inline-block; padding: 8px 14px; border: 2px solid var(--texto); border-radius: 8px; font-weight: 600; text-decoration: none; }
+a.boton-tienda:hover { background: var(--texto); color: #fff; }
 button.secundario { background: var(--texto); }
 button.peligro { background: var(--rojo); }
 button.enlace { background: none; color: #fff; text-decoration: underline; padding: 0; }

@@ -24,6 +24,10 @@
     <form:input id="precioAnterior" path="precioAnterior" inputmode="decimal" maxlength="10"/>
     <form:errors path="precioAnterior" cssClass="campo-error" element="p"/>
 
+    <label for="enlace">Enlace a la oferta en la tienda (opcional, https://)</label>
+    <form:input id="enlace" path="enlace" type="url" maxlength="300" placeholder="https://"/>
+    <form:errors path="enlace" cssClass="campo-error" element="p"/>
+
     <label for="categoriaId">Categoría</label>
     <form:select id="categoriaId" path="categoriaId">
         <form:option value="" label="Elige una categoría"/>

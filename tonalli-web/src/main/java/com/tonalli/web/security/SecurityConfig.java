@@ -1,5 +1,6 @@
 package com.tonalli.web.security;
 
+import jakarta.servlet.DispatcherType;
 import java.util.LinkedHashMap;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -66,6 +67,10 @@ public class SecurityConfig {
 
         http
             .authorizeHttpRequests(auth -> auth
+                // Reenvío interno del controlador a su JSP (/WEB-INF/jsp/...). No es una petición del navegador:
+                // la URL pública ya pasó por las reglas de abajo. Sin esta línea, Spring Security 6 trata el
+                // JSP como una página protegida y redirige a /login sin fin (ERR_TOO_MANY_REDIRECTS).
+                .dispatcherTypeMatchers(DispatcherType.FORWARD).permitAll()
                 .requestMatchers("/css/**", "/js/**", "/img/**", "/error", "/error/**").permitAll()
                 .requestMatchers("/login", "/registro", "/registro/**", "/verificar").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()

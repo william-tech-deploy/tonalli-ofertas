@@ -33,6 +33,7 @@ CREATE TABLE ofertas (
     tienda                    VARCHAR(80)  NOT NULL,
     precio_centavos           INT          NOT NULL,         -- enteros: sin errores de redondeo
     precio_anterior_centavos  INT          NULL,
+    enlace                    VARCHAR(300) NULL,             -- dirección https de la oferta en la tienda
     estado                    VARCHAR(20)  NOT NULL,         -- ACTIVA | OCULTA | ELIMINADA
     categoria_id              BIGINT       NOT NULL,
     autor_id                  BIGINT       NOT NULL,
