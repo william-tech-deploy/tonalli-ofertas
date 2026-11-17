@@ -4,95 +4,97 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_tinta"
+    android:background="@color/tonalli_background"
     android:orientation="vertical">
 
+    <!-- Barra superior: logo + nombre, y el menú de opciones a la derecha. -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/brand_tinta"
-        android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.Material3.Light"
-        app:titleTextColor="@color/brand_papel" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
         android:background="@color/tonalli_background"
-        android:orientation="vertical">
+        app:logo="@drawable/ic_logo"
+        app:titleMarginStart="12dp"
+        app:titleTextAppearance="@style/TonalliTituloBarra" />
+
+    <!-- Pestañas de categoría, como en la versión web. -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabs"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@color/tonalli_background"
+        app:tabGravity="start"
+        app:tabIndicatorColor="@color/tonalli_primary"
+        app:tabIndicatorHeight="3dp"
+        app:tabMode="scrollable"
+        app:tabRippleColor="@color/tonalli_primary_container"
+        app:tabSelectedTextColor="@color/tonalli_on_surface"
+        app:tabTextAppearance="@style/TonalliPestana"
+        app:tabTextColor="@color/tonalli_on_surface_muted" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/tonalli_outline_subtle" />
+
+    <TextView
+        android:id="@+id/tvOrden"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="10dp"
+        android:textColor="@color/tonalli_on_surface_muted"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/tonalli_outline_subtle" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <ListView
+            android:id="@+id/lvOfertas"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:divider="@drawable/linea"
+            android:dividerHeight="1dp"
+            android:footerDividersEnabled="true" />
 
         <TextView
+            android:id="@+id/tvVacio"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingStart="16dp"
-            android:paddingTop="12dp"
-            android:paddingEnd="16dp"
-            android:text="@string/lema"
-            android:textColor="@color/tonalli_primary"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:padding="32dp"
+            android:textColor="@color/tonalli_on_surface_muted"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:visibility="gone" />
+    </FrameLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp">
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/tonalli_outline_subtle" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:labelFor="@+id/spFiltro"
-                android:text="Categoría:"
-                android:textColor="@color/tonalli_on_surface_muted"
-                android:textSize="14sp" />
-
-            <Spinner
-                android:id="@+id/spFiltro"
-                android:layout_width="0dp"
-                android:layout_height="48dp"
-                android:layout_weight="1" />
-        </LinearLayout>
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1">
-
-            <ListView
-                android:id="@+id/lvOfertas"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:divider="@android:color/transparent"
-                android:dividerHeight="10dp"
-                android:paddingStart="16dp"
-                android:paddingTop="8dp"
-                android:paddingEnd="16dp"
-                android:paddingBottom="88dp" />
-
-            <TextView
-                android:id="@+id/tvVacio"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:padding="32dp"
-                android:textColor="@color/tonalli_on_surface_muted"
-                android:textSize="16sp"
-                android:visibility="gone" />
-
-            <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-                android:id="@+id/fabPublicar"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|end"
-                android:layout_margin="16dp"
-                android:text="@string/publicar"
-                android:textColor="@color/tonalli_on_primary"
-                app:backgroundTint="@color/tonalli_primary" />
-        </FrameLayout>
-    </LinearLayout>
+    <!-- Barra inferior de navegación. -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/nav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/tonalli_surface"
+        app:backgroundTint="@color/tonalli_surface"
+        app:elevation="0dp"
+        app:itemActiveIndicatorStyle="@style/TonalliIndicadorNav"
+        app:itemIconTint="@color/nav_item"
+        app:itemTextColor="@color/nav_item"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/nav_principal" />
 </LinearLayout>

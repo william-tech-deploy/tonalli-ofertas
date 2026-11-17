@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Termómetro: de frío (turquesa) a tibio (sol) a caliente (brasa). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background" android:height="10dp" android:gravity="center_vertical">
+        <shape android:shape="rectangle">
+            <gradient android:startColor="@color/brand_frio" android:centerColor="@color/brand_sol" android:endColor="@color/brand_brasa" android:angle="0" />
+            <corners android:radius="5dp" />
+        </shape>
+    </item>
+</layer-list>

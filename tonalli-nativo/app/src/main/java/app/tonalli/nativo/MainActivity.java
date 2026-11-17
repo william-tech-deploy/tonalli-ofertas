@@ -12,9 +12,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +23,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,8 +44,10 @@ public class MainActivity extends AppCompatActivity {
     private TonalliDb db;
     private final List<Oferta> ofertas = new ArrayList<>();
     private OfertaAdapter adapter;
-    private Spinner spFiltro;
-    private TextView tvVacio;
+    private TabLayout tabs;
+    private BottomNavigationView nav;
+    private TextView tvVacio, tvOrden;
+    private String categoria = "Todas";
     private boolean porCercania = false;
     private Location miUbicacion = null;
     private final ExecutorService hiloDeFondo = Executors.newSingleThreadExecutor();
@@ -66,22 +69,28 @@ public class MainActivity extends AppCompatActivity {
         db = new TonalliDb(this);
         Notificador.crearCanal(this);
 
-        spFiltro = findViewById(R.id.spFiltro);
         tvVacio = findViewById(R.id.tvVacio);
+        tvOrden = findViewById(R.id.tvOrden);
         ListView lista = findViewById(R.id.lvOfertas);
 
-        ArrayAdapter<CharSequence> filtro = ArrayAdapter.createFromResource(this,
-                R.array.filtro_categorias, android.R.layout.simple_spinner_item);
-        filtro.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spFiltro.setAdapter(filtro);
-        spFiltro.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        // Pestañas de categoría: una por cada texto del arreglo filtro_categorias (strings.xml).
+        tabs = findViewById(R.id.tabs);
+        for (String nombre : getResources().getStringArray(R.array.filtro_categorias)) {
+            tabs.addTab(tabs.newTab().setText(nombre));
+        }
+        tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            public void onTabSelected(TabLayout.Tab tab) {
+                categoria = tab.getText() == null ? "Todas" : tab.getText().toString();
                 cargar();
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
             }
         });
 
@@ -93,8 +102,26 @@ public class MainActivity extends AppCompatActivity {
         // Toque largo: menú contextual.
         registerForContextMenu(lista);
 
-        findViewById(R.id.fabPublicar).setOnClickListener(v ->
-                publicarLauncher.launch(new Intent(this, PublicarActivity.class)));
+        // Barra inferior: Inicio y Cerca cambian el orden de la lista; Publicar y Alertas abren otra pantalla.
+        nav = findViewById(R.id.nav);
+        nav.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_inicio) {
+                porCercania = false;
+                cargar();
+                return true;
+            } else if (id == R.id.nav_cerca) {
+                pedirCercania();
+                return porCercania;
+            } else if (id == R.id.nav_publicar) {
+                publicarLauncher.launch(new Intent(this, PublicarActivity.class));
+                return false;
+            } else if (id == R.id.nav_alertas) {
+                startActivity(new Intent(this, AlertasActivity.class));
+                return false;
+            }
+            return false;
+        });
 
         // Cuando PublicarActivity termina con RESULT_OK se recarga la lista.
         publicarLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
@@ -130,12 +157,12 @@ public class MainActivity extends AppCompatActivity {
 
     /** Lee las ofertas de SQLite según el filtro y refresca la lista. */
     private void cargar() {
-        String categoria = spFiltro.getSelectedItem() == null ? "Todas" : spFiltro.getSelectedItem().toString();
         ofertas.clear();
         ofertas.addAll(db.listar(categoria));
         if (porCercania && miUbicacion != null) aplicarDistancias();
         adapter.notifyDataSetChanged();
-        tvVacio.setText("No hay ofertas en esta categoría.\nPublica la primera con el botón de abajo.");
+        tvOrden.setText(porCercania && miUbicacion != null ? "Más cercanas primero" : "Más calientes primero");
+        tvVacio.setText("No hay ofertas en esta categoría.\nPublica la primera con el botón Publicar.");
     }
 
     private void abrirDetalle(Oferta o) {
@@ -159,13 +186,10 @@ public class MainActivity extends AppCompatActivity {
             sincronizar();
             return true;
         } else if (id == R.id.op_cercanas) {
-            if (Ubicacion.tienePermiso(this)) ordenarPorCercania();
-            else permisoUbicacionLauncher.launch(new String[]{
-                    Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION});
+            pedirCercania();
             return true;
         } else if (id == R.id.op_temperatura) {
-            porCercania = false;
-            cargar();
+            nav.setSelectedItemId(R.id.nav_inicio);
             return true;
         } else if (id == R.id.op_alertas) {
             startActivity(new Intent(this, AlertasActivity.class));
@@ -249,6 +273,13 @@ public class MainActivity extends AppCompatActivity {
 
     // ------------------------------------------------------------ GPS
 
+    /** Pide el permiso de ubicación si falta y luego ordena por cercanía. */
+    private void pedirCercania() {
+        if (Ubicacion.tienePermiso(this)) ordenarPorCercania();
+        else permisoUbicacionLauncher.launch(new String[]{
+                Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION});
+    }
+
     private void ordenarPorCercania() {
         Toast.makeText(this, "Buscando tu ubicación…", Toast.LENGTH_SHORT).show();
         Ubicacion.obtener(this, ubicacion -> {
@@ -260,6 +291,7 @@ public class MainActivity extends AppCompatActivity {
             miUbicacion = ubicacion;
             porCercania = true;
             cargar();
+            nav.getMenu().findItem(R.id.nav_cerca).setChecked(true);
             Toast.makeText(this, "Ordenadas de la más cercana a la más lejana", Toast.LENGTH_SHORT).show();
         });
     }

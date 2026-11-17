@@ -7,11 +7,86 @@
         <item name="colorOnPrimaryContainer">@color/tonalli_on_primary_container</item>
         <item name="colorSecondary">@color/tonalli_secondary</item>
         <item name="colorOnSecondary">@color/tonalli_on_secondary</item>
-        <item name="colorSecondaryContainer">@color/tonalli_surface_variant</item>
-        <item name="colorOnSecondaryContainer">@color/tonalli_on_surface</item>
+        <item name="colorSecondaryContainer">@color/tonalli_primary_container</item>
+        <item name="colorOnSecondaryContainer">@color/tonalli_on_primary_container</item>
         <item name="android:colorBackground">@color/tonalli_background</item>
+        <item name="android:windowBackground">@color/tonalli_background</item>
         <item name="colorSurface">@color/tonalli_surface</item>
         <item name="colorOnSurface">@color/tonalli_on_surface</item>
-        <item name="android:statusBarColor">@color/brand_tinta</item>
+        <!-- Tipografía de la marca en toda la app -->
+        <item name="android:fontFamily">@font/jakarta</item>
+        <item name="fontFamily">@font/jakarta</item>
+        <item name="materialButtonStyle">@style/TonalliBoton</item>
+    </style>
+
+    <!-- Botón principal: rojo brasa, esquinas de 10dp como en la versión web. -->
+    <style name="TonalliBoton" parent="Widget.Material3.Button">
+        <item name="cornerRadius">10dp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:fontFamily">@font/jakarta</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Botón secundario: blanco con borde. -->
+    <style name="TonalliBotonBorde" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="cornerRadius">10dp</item>
+        <item name="strokeColor">@color/tonalli_outline_subtle</item>
+        <item name="backgroundTint">@color/tonalli_surface</item>
+        <item name="android:textColor">@color/tonalli_on_surface</item>
+        <item name="iconTint">@color/tonalli_on_surface</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:fontFamily">@font/jakarta</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TonalliTituloBarra" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">@font/bricolage</item>
+        <item name="fontFamily">@font/bricolage</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:textColor">@color/tonalli_on_background</item>
+    </style>
+
+    <style name="TonalliPestana" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/jakarta</item>
+        <item name="fontFamily">@font/jakarta</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">15sp</item>
+        <item name="textAllCaps">false</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!-- Etiqueta pequeña en mayúsculas sobre cada campo. -->
+    <style name="TonalliEtiqueta">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">14dp</item>
+        <item name="android:layout_marginBottom">6dp</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="android:textColor">@color/tonalli_on_surface_muted</item>
+    </style>
+
+    <!-- Campo de texto: blanco, borde fino, esquinas redondeadas. -->
+    <style name="TonalliCampo">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">52dp</item>
+        <item name="android:background">@drawable/bg_campo</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@color/tonalli_on_surface</item>
+        <item name="android:textColorHint">@color/tonalli_on_surface_muted</item>
+        <item name="android:importantForAutofill">no</item>
+    </style>
+
+    <style name="TonalliIndicadorNav" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/tonalli_primary_container</item>
     </style>
 </resources>

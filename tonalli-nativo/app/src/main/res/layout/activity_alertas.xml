@@ -4,99 +4,89 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_tinta"
+    android:background="@color/tonalli_background"
     android:orientation="vertical">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/brand_tinta"
-        android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.Material3.Light"
-        app:titleTextColor="@color/brand_papel" />
+        android:background="@color/tonalli_background"
+        app:titleTextAppearance="@style/TonalliTituloBarra" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/tonalli_outline_subtle" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/tonalli_background"
         android:orientation="vertical"
         android:padding="16dp">
 
-        <TextView
+        <!-- Tarjeta: nueva alerta -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Te avisamos con una notificación cuando una oferta nueva tenga esta palabra y cueste eso o menos."
-            android:textColor="@color/tonalli_on_surface_muted"
-            android:textSize="14sp" />
+            android:background="@drawable/bg_tarjeta"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                style="@style/TonalliEtiqueta"
+                android:layout_marginTop="0dp"
+                android:text="Nueva alerta" />
+
+            <TextView
+                style="@style/TonalliEtiqueta"
+                android:labelFor="@+id/etPalabra"
+                android:text="Producto" />
+
+            <EditText
+                android:id="@+id/etPalabra"
+                style="@style/TonalliCampo"
+                android:hint="Ej. Leche en polvo"
+                android:inputType="text"
+                android:maxLength="40" />
+
+            <TextView
+                style="@style/TonalliEtiqueta"
+                android:labelFor="@+id/etMax"
+                android:text="Avisar si baja de" />
+
+            <EditText
+                android:id="@+id/etMax"
+                style="@style/TonalliCampo"
+                android:hint="5.00"
+                android:inputType="numberDecimal"
+                android:maxLength="9" />
+
+            <Button
+                android:id="@+id/btnAgregar"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="14dp"
+                android:text="Crear alerta" />
+        </LinearLayout>
 
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:labelFor="@+id/etPalabra"
-            android:text="Palabra clave"
-            android:textColor="@color/tonalli_on_surface"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <EditText
-            android:id="@+id/etPalabra"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:hint="Ej.: leche"
-            android:importantForAutofill="no"
-            android:inputType="text"
-            android:maxLength="40"
-            android:textColor="@color/tonalli_on_surface"
-            android:textColorHint="@color/tonalli_on_surface_muted" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:labelFor="@+id/etMax"
-            android:text="Precio máximo ($)"
-            android:textColor="@color/tonalli_on_surface"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-
-        <EditText
-            android:id="@+id/etMax"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:hint="Ej.: 6.00"
-            android:importantForAutofill="no"
-            android:inputType="numberDecimal"
-            android:maxLength="9"
-            android:textColor="@color/tonalli_on_surface"
-            android:textColorHint="@color/tonalli_on_surface_muted" />
-
-        <Button
-            android:id="@+id/btnAgregar"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
-            android:layout_marginTop="12dp"
-            android:text="Crear alerta" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Tus alertas (mantén presionada una para eliminarla)"
-            android:textColor="@color/tonalli_on_surface"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            style="@style/TonalliEtiqueta"
+            android:text="Tus alertas · mantén presionada una para eliminarla" />
 
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:background="@drawable/bg_tarjeta"
+            android:padding="1dp">
 
             <ListView
                 android:id="@+id/lvAlertas"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="match_parent"
+                android:divider="@drawable/linea"
+                android:dividerHeight="1dp" />
 
             <TextView
                 android:id="@+id/tvVacio"
@@ -104,6 +94,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:gravity="center"
+                android:padding="24dp"
                 android:text="Aún no tienes alertas."
                 android:textColor="@color/tonalli_on_surface_muted"
                 android:textSize="15sp"

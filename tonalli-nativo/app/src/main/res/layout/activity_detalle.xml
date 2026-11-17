@@ -4,22 +4,24 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_tinta"
+    android:background="@color/tonalli_background"
     android:orientation="vertical">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="@color/brand_tinta"
-        android:theme="@style/ThemeOverlay.Material3.Dark.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.Material3.Light"
-        app:titleTextColor="@color/brand_papel" />
+        android:background="@color/tonalli_background"
+        app:titleTextAppearance="@style/TonalliTituloBarra" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/tonalli_outline_subtle" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/tonalli_background"
         android:fillViewport="true">
 
         <LinearLayout
@@ -28,45 +30,61 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <ImageView
-                android:id="@+id/ivFoto"
+            <!-- Imagen grande: la foto si existe; si no, el ícono de la categoría -->
+            <FrameLayout
+                android:id="@+id/hero"
                 android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_marginBottom="12dp"
-                android:background="@drawable/bg_tarjeta"
-                android:contentDescription="Foto de la oferta"
-                android:scaleType="centerCrop"
-                android:visibility="gone" />
+                android:layout_height="180dp"
+                android:background="@drawable/bg_miniatura">
+
+                <ImageView
+                    android:id="@+id/ivCategoria"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no" />
+
+                <ImageView
+                    android:id="@+id/ivFoto"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="Foto de la oferta"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+            </FrameLayout>
 
             <TextView
                 android:id="@+id/tvTitulo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:fontFamily="@font/bricolage"
                 android:textColor="@color/tonalli_on_surface"
-                android:textSize="24sp"
+                android:textSize="26sp"
                 android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tvTienda"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="4dp"
                 android:textColor="@color/tonalli_on_surface_muted"
-                android:textSize="15sp" />
+                android:textSize="14sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:gravity="bottom"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <TextView
                     android:id="@+id/tvAhora"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="@font/bricolage"
                     android:textColor="@color/tonalli_on_surface"
-                    android:textSize="34sp"
+                    android:textSize="38sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -75,127 +93,134 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="12dp"
                     android:textColor="@color/tonalli_on_surface_muted"
-                    android:textSize="18sp" />
+                    android:textSize="17sp" />
+
+                <TextView
+                    android:id="@+id/tvDescuento"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:textColor="@color/oferta_verde"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <TextView
-                android:id="@+id/tvDescuento"
+                android:id="@+id/tvAhorro"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textColor="@color/tonalli_primary"
-                android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textColor="@color/tonalli_on_surface_muted"
+                android:textSize="14sp" />
 
+            <!-- Tarjeta de temperatura -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/bg_tarjeta"
                 android:orientation="vertical"
-                android:padding="14dp">
+                android:padding="16dp">
 
                 <TextView
+                    style="@style/TonalliEtiqueta"
+                    android:layout_marginTop="0dp"
+                    android:text="Temperatura" />
+
+                <SeekBar
+                    android:id="@+id/pbTemp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Temperatura de la comunidad"
-                    android:textColor="@color/tonalli_on_surface_muted"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:max="200"
+                    android:paddingStart="11dp"
+                    android:paddingEnd="11dp"
+                    android:progressDrawable="@drawable/medidor_pista"
+                    android:splitTrack="false"
+                    android:thumb="@drawable/medidor_punto"
+                    android:thumbOffset="11dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="6dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <LinearLayout
-                        android:id="@+id/insignia"
-                        android:layout_width="92dp"
+                    <ImageView
+                        android:id="@+id/ivCalor"
+                        android:layout_width="26dp"
+                        android:layout_height="26dp"
+                        android:importantForAccessibility="no" />
+
+                    <TextView
+                        android:id="@+id/tvTemp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:background="@drawable/bg_insignia"
-                        android:gravity="center"
-                        android:orientation="vertical"
-                        android:paddingTop="8dp"
-                        android:paddingBottom="8dp">
-
-                        <TextView
-                            android:id="@+id/tvTemp"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="26sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/tvCalor"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="13sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="14dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <ProgressBar
-                            android:id="@+id/pbTemp"
-                            style="@android:style/Widget.ProgressBar.Horizontal"
-                            android:layout_width="match_parent"
-                            android:layout_height="14dp"
-                            android:progressTint="@color/brand_brasa" />
-
-                        <TextView
-                            android:id="@+id/tvVotos"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
-                            android:textColor="@color/tonalli_on_surface_muted"
-                            android:textSize="13sp" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/btnSubir"
-                        android:layout_width="0dp"
-                        android:layout_height="52dp"
-                        android:layout_marginEnd="6dp"
-                        android:layout_weight="1"
-                        android:text="Es buena" />
-
-                    <Button
-                        android:id="@+id/btnBajar"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        android:layout_width="0dp"
-                        android:layout_height="52dp"
                         android:layout_marginStart="6dp"
+                        android:fontFamily="@font/bricolage"
+                        android:textSize="32sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCalor"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvVotos"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
                         android:layout_weight="1"
-                        android:text="No es real" />
+                        android:textColor="@color/tonalli_on_surface_muted"
+                        android:textSize="13sp" />
                 </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnSubir"
+                    style="@style/TonalliBotonBorde"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:text="Es real +1"
+                    android:textColor="@color/oferta_verde" />
+
+                <Button
+                    android:id="@+id/btnBajar"
+                    style="@style/TonalliBotonBorde"
+                    android:layout_width="0dp"
+                    android:layout_height="56dp"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:text="Es falsa −1"
+                    android:textColor="@color/tonalli_primary" />
             </LinearLayout>
 
             <Button
                 android:id="@+id/btnMapa"
-                style="@style/Widget.Material3.Button.TonalButton"
+                style="@style/TonalliBotonBorde"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:layout_marginTop="16dp"
-                android:text="Ver la tienda en el mapa" />
+                android:layout_height="56dp"
+                android:layout_marginTop="12dp"
+                android:text="Ver la tienda en el mapa"
+                app:icon="@drawable/ic_pin"
+                app:iconGravity="textStart" />
 
             <Button
                 android:id="@+id/btnCompartir"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/TonalliBotonBorde"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
+                android:layout_height="56dp"
                 android:layout_marginTop="8dp"
                 android:text="Compartir" />
 

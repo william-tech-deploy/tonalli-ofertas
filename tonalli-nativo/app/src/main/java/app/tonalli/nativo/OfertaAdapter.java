@@ -1,18 +1,17 @@
 package app.tonalli.nativo;
 
 import android.content.Context;
-import android.content.res.ColorStateList;
 import android.graphics.Paint;
+import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
-import androidx.core.view.ViewCompat;
 
 import java.util.List;
 
@@ -38,29 +37,24 @@ public class OfertaAdapter extends ArrayAdapter<Oferta> {
         TextView tvAhora = fila.findViewById(R.id.tvAhora);
         TextView tvAntes = fila.findViewById(R.id.tvAntes);
         TextView tvDescuento = fila.findViewById(R.id.tvDescuento);
-        View insignia = fila.findViewById(R.id.insignia);
+        ImageView ivCalor = fila.findViewById(R.id.ivCalor);
+        ImageView ivCategoria = fila.findViewById(R.id.ivCategoria);
 
+        Marca.pintarCategoria(getContext(), fila.findViewById(R.id.miniatura), ivCategoria, o.categoria);
         tvTemp.setText(o.temperatura() + "°");
         tvCalor.setText(o.calor());
-        pintarCalor(getContext(), o, insignia, tvTemp, tvCalor);
+        Marca.pintarCalor(getContext(), o, ivCalor, tvTemp, tvCalor);
 
         tvTitulo.setText(o.titulo);
-        String lugar = o.tienda + " · " + o.categoria;
-        if (o.distanciaM >= 0) lugar += " · " + Ui.distancia(o.distanciaM);
-        tvTienda.setText(lugar);
+        // Con GPS se muestra la distancia; sin GPS, hace cuánto se publicó.
+        String detalle = o.distanciaM >= 0 ? "a " + Ui.distancia(o.distanciaM)
+                : DateUtils.getRelativeTimeSpanString(o.fecha, System.currentTimeMillis(),
+                DateUtils.MINUTE_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE).toString();
+        tvTienda.setText(o.tienda + " · " + detalle);
         tvAhora.setText(Ui.dinero(o.ahora));
         tvAntes.setText(Ui.dinero(o.antes));
         tvAntes.setPaintFlags(tvAntes.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-        tvDescuento.setText("-" + o.descuento() + "%");
+        tvDescuento.setText("−" + o.descuento() + "%");
         return fila;
-    }
-
-    /** Colores de la marca según la temperatura: caliente, tibia o fría. */
-    public static void pintarCalor(Context c, Oferta o, View fondo, TextView... textos) {
-        int t = o.temperatura();
-        int bg = t >= 100 ? R.color.tonalli_hot_bg : t >= 0 ? R.color.tonalli_warm_bg : R.color.tonalli_cold_bg;
-        int fg = t >= 100 ? R.color.tonalli_hot_fg : t >= 0 ? R.color.tonalli_warm_fg : R.color.tonalli_cold_fg;
-        ViewCompat.setBackgroundTintList(fondo, ColorStateList.valueOf(ContextCompat.getColor(c, bg)));
-        for (TextView tv : textos) tv.setTextColor(ContextCompat.getColor(c, fg));
     }
 }

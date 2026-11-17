@@ -29,7 +29,7 @@ public class DetalleActivity extends AppCompatActivity {
     private TextView tvTemp, tvCalor, tvVotos;
     private ProgressBar pbTemp;
     private Button btnSubir, btnBajar;
-    private View insignia;
+    private ImageView ivCalor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,16 +58,19 @@ public class DetalleActivity extends AppCompatActivity {
         pbTemp = findViewById(R.id.pbTemp);
         btnSubir = findViewById(R.id.btnSubir);
         btnBajar = findViewById(R.id.btnBajar);
-        insignia = findViewById(R.id.insignia);
+        ivCalor = findViewById(R.id.ivCalor);
+        pbTemp.setOnTouchListener((v, e) -> true); // el termómetro solo se mira, no se arrastra
 
         ((TextView) findViewById(R.id.tvTitulo)).setText(oferta.titulo);
+        if (getSupportActionBar() != null) getSupportActionBar().setTitle(oferta.categoria);
         ((TextView) findViewById(R.id.tvTienda)).setText(oferta.tienda + " · " + oferta.categoria);
+        Marca.pintarCategoria(this, findViewById(R.id.hero), findViewById(R.id.ivCategoria), oferta.categoria);
         ((TextView) findViewById(R.id.tvAhora)).setText(Ui.dinero(oferta.ahora));
         TextView tvAntes = findViewById(R.id.tvAntes);
         tvAntes.setText(Ui.dinero(oferta.antes));
         tvAntes.setPaintFlags(tvAntes.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
-        ((TextView) findViewById(R.id.tvDescuento)).setText("-" + oferta.descuento() + "%  ·  ahorras "
-                + Ui.dinero(oferta.antes - oferta.ahora));
+        ((TextView) findViewById(R.id.tvDescuento)).setText("−" + oferta.descuento() + "%");
+        ((TextView) findViewById(R.id.tvAhorro)).setText("Ahorras " + Ui.dinero(oferta.antes - oferta.ahora));
         ((TextView) findViewById(R.id.tvFecha)).setText("Publicada "
                 + DateUtils.getRelativeTimeSpanString(oferta.fecha, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS)
                 + (oferta.remota != null ? "  ·  vino del servicio web" : "  ·  guardada en este teléfono"));
@@ -102,12 +105,12 @@ public class DetalleActivity extends AppCompatActivity {
         int t = oferta.temperatura();
         tvTemp.setText(t + "°");
         tvCalor.setText(oferta.calor());
-        OfertaAdapter.pintarCalor(this, oferta, insignia, tvTemp, tvCalor);
+        Marca.pintarCalor(this, oferta, ivCalor, tvTemp, tvCalor);
         // Termómetro: de -50 a 150 grados se dibuja en una barra de 0 a 200.
         pbTemp.setMax(200);
         pbTemp.setProgress(Math.max(0, Math.min(200, t + 50)));
         tvVotos.setText(oferta.up + " a favor  ·  " + oferta.down + " en contra");
-        btnSubir.setText(oferta.miVoto == 1 ? "✓ Es buena" : "Es buena");
-        btnBajar.setText(oferta.miVoto == -1 ? "✓ No es real" : "No es real");
+        btnSubir.setText(oferta.miVoto == 1 ? "✓ Es real +1" : "Es real +1");
+        btnBajar.setText(oferta.miVoto == -1 ? "✓ Es falsa −1" : "Es falsa −1");
     }
 }
