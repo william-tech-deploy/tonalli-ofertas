@@ -22,7 +22,7 @@
     <a class="acceso" href="<c:url value='/moderacion'/>"><strong>Moderación</strong><span>Revisa reportes, oculta o restaura ofertas.</span></a>
     <a class="acceso" href="<c:url value='/admin/usuarios'/>"><strong>Usuarios y roles</strong><span>Asigna Usuario, Moderador o Administrador.</span></a>
     <a class="acceso" href="<c:url value='/admin/categorias'/>"><strong>Categorías y propuestas</strong><span>Crea categorías y resuelve propuestas.</span></a>
-    <a class="acceso" href="<c:url value='/admin/graficos'/>"><strong>Gráficos</strong><span>Ofertas por categoría y reportes por motivo.</span></a>
+    <a class="acceso" href="<c:url value='/admin/informes'/>"><strong>Reportes y estadísticas</strong><span>Indicadores, siete gráficos y descarga de reportes en CSV.</span></a>
 </nav>
 
 <%@ include file="/WEB-INF/jsp/fragmentos/pie.jspf" %>

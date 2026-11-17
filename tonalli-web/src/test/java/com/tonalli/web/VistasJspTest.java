@@ -160,6 +160,80 @@ class VistasJspTest {
         assertEquals((byte) 0xD8, img.body()[1]);
     }
 
+    /**
+     * La página de informes dibujada por el motor JSP real. MockMvc no sirve para esto: no ejecuta las
+     * JSP, así que un error de sintaxis en la plantilla o un acento roto solo se ve aquí.
+     */
+    @Test
+    void elAdministradorVeLosSieteGraficosYElFormularioDeDescarga() throws Exception {
+        HttpClient admin = conSesion("admin@tonalli.local", "CambiaEstaClave#2026");
+        String html = paginaConSesion(admin, "/admin/informes");
+
+        assertTrue(html.contains("<h1>Reportes y estadísticas</h1>"), "El título debe leerse en UTF-8");
+        assertTrue(html.contains("Descuento promedio"), "Los indicadores se dibujan");
+        assertEquals(7, html.split("data-url=", -1).length - 1, "La página declara siete gráficos");
+        assertTrue(html.contains("/api/estadisticas/ofertas-por-mes"), "Cada gráfico apunta a su API");
+        assertTrue(html.contains("/js/graficos.js"), "Y carga el script que los pinta");
+        assertTrue(html.contains("Resumen estadístico"), "El desplegable ofrece los cuatro reportes");
+        assertTrue(html.contains("name=\"desde\"") && html.contains("name=\"hasta\""),
+                "El formulario deja elegir el periodo");
+    }
+
+    /** La ruta anterior de los gráficos sigue funcionando: ahora redirige a la sección de informes. */
+    @Test
+    void laRutaAnteriorDeGraficosRedirigeALosInformes() throws Exception {
+        HttpClient admin = conSesion("admin@tonalli.local", "CambiaEstaClave#2026");
+        HttpResponse<String> r = admin.send(
+                HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + "/admin/graficos")).build(),
+                HttpResponse.BodyHandlers.ofString());
+
+        assertEquals(302, r.statusCode());
+        assertTrue(r.headers().firstValue("Location").orElse("").endsWith("/admin/informes"),
+                r.headers().firstValue("Location").orElse("(sin Location)"));
+    }
+
+    /**
+     * Descarga real de un informe: comprueba las cabeceras que hacen que el navegador lo guarde en vez de
+     * mostrarlo, que no lo deje en la caché del disco (lleva correos) y que el archivo empiece con el BOM.
+     */
+    @Test
+    void elAdministradorDescargaUnInformeConLasCabecerasCorrectas() throws Exception {
+        HttpClient admin = conSesion("admin@tonalli.local", "CambiaEstaClave#2026");
+        HttpResponse<byte[]> csv = admin.send(
+                HttpRequest.newBuilder(URI.create("http://localhost:" + puerto
+                        + "/admin/informes/descargar?tipo=RESUMEN")).build(),
+                HttpResponse.BodyHandlers.ofByteArray());
+
+        assertEquals(200, csv.statusCode());
+        assertTrue(csv.headers().firstValue("Content-Type").orElse("").startsWith("text/csv"),
+                csv.headers().firstValue("Content-Type").orElse("(sin tipo)"));
+        assertTrue(csv.headers().firstValue("Content-Disposition").orElse("").contains("attachment"),
+                "Debe descargarse, no abrirse en el navegador");
+        assertTrue(csv.headers().firstValue("Content-Disposition").orElse("").contains("tonalli-resumen"),
+                csv.headers().firstValue("Content-Disposition").orElse("(sin nombre)"));
+        assertTrue(csv.headers().firstValue("Cache-Control").orElse("").contains("no-store"),
+                "Un informe no puede quedar guardado en el disco del navegador");
+        assertEquals("nosniff", csv.headers().firstValue("X-Content-Type-Options").orElse(""));
+
+        String contenido = new String(csv.body(), StandardCharsets.UTF_8);
+        assertEquals('\uFEFF', contenido.charAt(0), "El BOM es lo que hace que Excel lea los acentos");
+        assertTrue(contenido.contains("Tasa de verificación (%)"), "Y los acentos llegan bien");
+    }
+
+    /** Un tipo de informe que no existe se rechaza: la lista blanca la hace el propio enum. */
+    @Test
+    void unTipoDeInformeInventadoNoDevuelveArchivo() throws Exception {
+        HttpClient admin = conSesion("admin@tonalli.local", "CambiaEstaClave#2026");
+        HttpResponse<String> r = admin.send(
+                HttpRequest.newBuilder(URI.create("http://localhost:" + puerto
+                        + "/admin/informes/descargar?tipo=../../etc/passwd")).build(),
+                HttpResponse.BodyHandlers.ofString());
+
+        assertTrue(r.statusCode() >= 400, "No puede responder 200 a un tipo inexistente: " + r.statusCode());
+        assertTrue(!r.headers().firstValue("Content-Type").orElse("").startsWith("text/csv"),
+                "Y menos devolver un archivo");
+    }
+
     @Test
     void elIconoYLasIlustracionesSonPublicos() {
         assertEquals(HttpStatus.OK, http.getForEntity("/img/favicon.svg", String.class).getStatusCode());

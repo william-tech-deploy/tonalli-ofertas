@@ -106,9 +106,15 @@ public class AdminController {
         return "redirect:/admin/categorias";
     }
 
+    /**
+     * Dirección anterior de los gráficos. Se conserva como redirección en vez de borrarla porque la
+     * documentación y las diapositivas ya entregadas la mencionan, y un enlace guardado que responde 404
+     * parece que el sitio se rompió. Ahora los gráficos viven dentro de /admin/informes, junto con los
+     * indicadores y la descarga de reportes.
+     */
     @GetMapping("/admin/graficos")
     public String graficos() {
-        return "admin-graficos";
+        return "redirect:/admin/informes";
     }
 
     private void cargarCategorias(Model model) {

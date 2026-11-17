@@ -95,6 +95,42 @@ class SeguridadWebTest {
         mvc.perform(get("/api/estadisticas/ofertas-por-categoria")).andExpect(status().isForbidden());
     }
 
+    /**
+     * La sección de informes cuelga de /admin/** justamente para quedar cubierta por la regla que ya
+     * existe en SecurityConfig. Esta prueba es la que avisaría si alguien le cambiara la ruta: un informe
+     * con correos de usuarios al alcance de cualquiera sería la peor fuga posible del proyecto.
+     */
+    @Test
+    @WithMockUser(roles = "USER")
+    void unUsuarioComunNoVeLosInformesNiPuedeDescargarlos() throws Exception {
+        mvc.perform(get("/admin/informes")).andExpect(status().isForbidden());
+        mvc.perform(get("/admin/informes/descargar").param("tipo", "USUARIOS")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "MODERADOR")
+    void unModeradorTampocoDescargaInformes() throws Exception {
+        mvc.perform(get("/admin/informes")).andExpect(status().isForbidden());
+        mvc.perform(get("/admin/informes/descargar").param("tipo", "OFERTAS")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void sinSesionLosInformesRedirigenAlLogin() throws Exception {
+        mvc.perform(get("/admin/informes"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void lasApisDeLosGraficosNuevasTambienSonSoloDeAdmin() throws Exception {
+        for (String ruta : new String[] {"/api/estadisticas/ofertas-por-mes",
+                "/api/estadisticas/usuarios-por-rol", "/api/estadisticas/temperatura",
+                "/api/estadisticas/descuento-por-categoria", "/api/estadisticas/reportes-por-estado"}) {
+            mvc.perform(get(ruta)).andExpect(status().isForbidden());
+        }
+    }
+
     @Test
     void elRegistroConContrasenaCortaMuestraElError() throws Exception {
         mvc.perform(post("/registro").with(csrf())

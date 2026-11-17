@@ -117,6 +117,59 @@ public interface OfertaRepository extends JpaRepository<Oferta, Long> {
 
     boolean existsByCategoriaId(Long categoriaId);
 
+    // ----- Informes y estadísticas (sección /admin/informes) -----
+
+    /**
+     * Instantes de creación de las ofertas del rango. Devuelve solo la fecha, no la entidad, y el
+     * agrupado por mes se hace en Java: las funciones de fecha de JPQL se traducen distinto en H2
+     * (pruebas y dev) y en MySQL (produccion), y así la misma consulta sirve en los dos motores sin
+     * depender del dialecto. El rango acota cuántas filas vuelven; si el sitio creciera mucho, este
+     * conteo se movería a una consulta agregada con la función de fecha propia del motor.
+     */
+    @Query("select o.creadaEn from Oferta o where o.estado <> :excluido "
+            + "and o.creadaEn >= :desde and o.creadaEn < :hasta")
+    List<Instant> fechasDeCreacion(@Param("excluido") EstadoOferta excluido,
+                                   @Param("desde") Instant desde,
+                                   @Param("hasta") Instant hasta);
+
+    /** Temperatura (suma de valor × peso) de cada oferta de un estado, incluidas las que no tienen votos (0). */
+    @Query("select (select coalesce(sum(v.valor * v.peso), 0) from Voto v where v.oferta = o) "
+            + "from Oferta o where o.estado = :estado")
+    List<Long> temperaturas(@Param("estado") EstadoOferta estado);
+
+    /** Descuento medio en porcentaje de las ofertas que declaran precio anterior. null si ninguna lo declara. */
+    @Query("select avg((o.precioAnteriorCentavos - o.precioCentavos) * 100.0 / o.precioAnteriorCentavos) "
+            + "from Oferta o where o.estado = :estado and o.precioAnteriorCentavos is not null")
+    Double descuentoPromedio(@Param("estado") EstadoOferta estado);
+
+    /** Precio medio en centavos de las ofertas de un estado. null si no hay ninguna. */
+    @Query("select avg(o.precioCentavos) from Oferta o where o.estado = :estado")
+    Double precioPromedio(@Param("estado") EstadoOferta estado);
+
+    long countByEstadoAndPrecioAnteriorCentavosIsNotNull(EstadoOferta estado);
+
+    long countByEstadoNotAndCreadaEnAfter(EstadoOferta estado, Instant desde);
+
+    /** Descuento medio por categoría: [nombre, porcentaje]. Solo categorías con al menos una oferta con descuento. */
+    @Query("select c.nombre, avg((o.precioAnteriorCentavos - o.precioCentavos) * 100.0 / o.precioAnteriorCentavos) "
+            + "from Oferta o join o.categoria c "
+            + "where o.estado = :estado and o.precioAnteriorCentavos is not null "
+            + "group by c.nombre order by c.nombre")
+    List<Object[]> descuentoPromedioPorCategoria(@Param("estado") EstadoOferta estado);
+
+    /**
+     * Filas del informe de ofertas. Es una proyección explícita: trae solo las diez columnas que salen
+     * al CSV en vez de la entidad completa, así el informe no carga en memoria datos que no publica.
+     */
+    @Query("select o.id, o.titulo, o.tienda, c.nombre, o.precioCentavos, o.precioAnteriorCentavos, "
+            + "o.estado, u.nombre, o.creadaEn, "
+            + "(select coalesce(sum(v.valor * v.peso), 0) from Voto v where v.oferta = o) "
+            + "from Oferta o join o.categoria c join o.autor u "
+            + "where o.creadaEn >= :desde and o.creadaEn < :hasta order by o.creadaEn desc")
+    List<Object[]> filasInformeOfertas(@Param("desde") Instant desde,
+                                       @Param("hasta") Instant hasta,
+                                       Pageable pageable);
+
     @Query("select c.nombre, count(o) from Oferta o join o.categoria c "
             + "where o.estado = :estado group by c.nombre order by c.nombre")
     List<Object[]> contarPorCategoria(@Param("estado") EstadoOferta estado);

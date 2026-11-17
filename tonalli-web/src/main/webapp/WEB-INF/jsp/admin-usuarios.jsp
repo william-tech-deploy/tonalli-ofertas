@@ -21,7 +21,7 @@
                     <%@ include file="/WEB-INF/jsp/fragmentos/csrf.jspf" %>
                     <select name="rol" aria-label="Rol de <c:out value='${u.nombre}'/>">
                         <c:forEach var="r" items="${roles}">
-                            <option value="<c:out value='${r}'/>" <c:if test="${r == u.rol}">selected</c:if>><c:out value="${r}"/></option>
+                            <option value="<c:out value='${r}'/>" <c:if test="${r == u.rol}">selected</c:if>><c:out value="${r.etiqueta}"/></option>
                         </c:forEach>
                     </select>
                     <button type="submit" class="secundario">Guardar</button>

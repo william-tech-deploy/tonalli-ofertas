@@ -6,22 +6,36 @@ package com.tonalli.web.dto;
  */
 public enum TemperaturaFiltro {
 
-    TODAS("Cualquier temperatura", null, null),
-    CALIENTE("Solo calientes", 100L, null),
-    TIBIA("Solo tibias", 0L, 99L),
-    FRIA("Solo frías", null, -1L);
+    TODAS("Cualquier temperatura", "Todas", null, null),
+    CALIENTE("Solo calientes", "Calientes", 100L, null),
+    TIBIA("Solo tibias", "Tibias", 0L, 99L),
+    FRIA("Solo frías", "Frías", null, -1L);
 
     private final String etiqueta;
+    private final String nombre;
     private final Long minimo;
     private final Long maximo;
 
-    TemperaturaFiltro(String etiqueta, Long minimo, Long maximo) {
+    TemperaturaFiltro(String etiqueta, String nombre, Long minimo, Long maximo) {
         this.etiqueta = etiqueta;
+        this.nombre = nombre;
         this.minimo = minimo;
         this.maximo = maximo;
     }
 
     public String getEtiqueta() { return etiqueta; }
+
+    /**
+     * Nombre corto del tramo, para los gráficos. Va aparte de {@link #getEtiqueta()} porque en el
+     * desplegable del catálogo el texto es una orden («Solo calientes») y en un gráfico es un rótulo
+     * («Calientes»): el mismo enum sirve para los dos sin que los límites se escriban dos veces.
+     */
+    public String getNombre() { return nombre; }
+
+    /** true si esa temperatura cae en este tramo. Los tramos del catálogo no se solapan. */
+    public boolean contiene(long temperatura) {
+        return (minimo == null || temperatura >= minimo) && (maximo == null || temperatura <= maximo);
+    }
     public Long getMinimo() { return minimo; }
     public Long getMaximo() { return maximo; }
 
