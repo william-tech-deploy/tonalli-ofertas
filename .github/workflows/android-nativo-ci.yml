@@ -4,7 +4,7 @@ on:
   push: { paths: ['tonalli-nativo/**', '.github/workflows/android-nativo-ci.yml'] }
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write   # solo para guardar las capturas en la rama ci-capturas
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -38,3 +38,15 @@ jobs:
         with:
           name: capturas-emulador
           path: tonalli-nativo/capturas/
+      - name: Guardar capturas en la rama ci-capturas
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd capturas || exit 0
+          rm -f logcat.txt
+          git init -q -b ci-capturas
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -q -m "Capturas del emulador"
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" ci-capturas
