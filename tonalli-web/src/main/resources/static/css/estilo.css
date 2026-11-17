@@ -88,9 +88,20 @@ input, select, textarea {
     background: #fff;
     width: 100%;
 }
-.busqueda { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
-.busqueda input { flex: 2 1 200px; width: auto; }
-.busqueda select { flex: 1 1 160px; width: auto; }
+.busqueda { margin-bottom: 16px; }
+.busqueda-fila { display: flex; flex-wrap: wrap; gap: 8px; }
+.busqueda-fila input { flex: 2 1 200px; width: auto; }
+.busqueda-fila select { flex: 1 1 160px; width: auto; }
+.filtros { margin-top: 10px; background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 14px; padding: 12px 16px; }
+.filtros summary { cursor: pointer; font-weight: 600; }
+.filtros-campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 12px; }
+.campo { display: flex; flex-direction: column; gap: 4px; }
+.campo label { font-size: 0.9rem; font-weight: 600; }
+.campo-casilla { flex-direction: row; align-items: center; gap: 8px; align-self: end; }
+.campo-casilla input { width: auto; margin: 0; }
+.campo-casilla label { font-weight: 400; }
+.filtros-acciones { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 12px; }
+.resultado { margin: 0 0 16px; }
 
 .ofertas { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .oferta {
@@ -135,6 +146,18 @@ input, select, textarea {
 
 .graficos { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 .graficos canvas { max-width: 100%; }
+
+/* Votación de categorías */
+.propuestas { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.propuesta { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between;
+    background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 14px; padding: 16px; }
+.propuesta-datos { flex: 1 1 260px; }
+.propuesta h3 { margin: 0 0 4px; font-size: 1.1rem; }
+.barra { width: 100%; height: 10px; margin: 8px 0 4px; border: none; border-radius: 999px;
+    background: #F3E8D8; appearance: none; }
+.barra::-webkit-progress-bar { background: #F3E8D8; border-radius: 999px; }
+.barra::-webkit-progress-value { background: var(--accion); border-radius: 999px; }
+.barra::-moz-progress-bar { background: var(--accion); border-radius: 999px; }
 
 /* Imágenes de las ofertas */
 .miniatura { width: 88px; height: 88px; object-fit: cover; border-radius: 12px; background: #F3E8D8; }

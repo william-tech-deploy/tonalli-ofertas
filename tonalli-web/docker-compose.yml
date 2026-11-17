@@ -34,6 +34,7 @@ services:
       TONALLI_ADMIN_CORREO: ${TONALLI_ADMIN_CORREO:-}
       TONALLI_ADMIN_PASSWORD: ${TONALLI_ADMIN_PASSWORD:-}
       # Datos de ejemplo: apagados salvo que el .env diga TONALLI_DEMO=true. Nunca en producción.
+      TONALLI_PROPUESTAS_UMBRAL: ${TONALLI_PROPUESTAS_UMBRAL:-25}
       TONALLI_DEMO: ${TONALLI_DEMO:-false}
       TONALLI_DEMO_PASSWORD: ${TONALLI_DEMO_PASSWORD:-}
       BASE_URL: ${BASE_URL:-http://localhost:8080}

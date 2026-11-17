@@ -8,6 +8,7 @@ import com.tonalli.web.dto.PropuestaVista;
 import com.tonalli.web.exception.OperacionInvalidaException;
 import com.tonalli.web.exception.RecursoNoEncontradoException;
 import com.tonalli.web.model.Alerta;
+import com.tonalli.web.model.Categoria;
 import com.tonalli.web.model.EstadoOferta;
 import com.tonalli.web.model.EstadoPropuesta;
 import com.tonalli.web.model.Propuesta;
@@ -16,7 +17,11 @@ import com.tonalli.web.repository.CategoriaRepository;
 import com.tonalli.web.repository.OfertaRepository;
 import com.tonalli.web.repository.PropuestaRepository;
 import com.tonalli.web.repository.UsuarioRepository;
+import java.util.Comparator;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 /** Cosas que hace un usuario sobre su propia cuenta: alertas y propuestas de categorías. */
 @Service
 public class CuentaService {
+
+    private static final Logger AUDITORIA = LoggerFactory.getLogger("AUDITORIA");
 
     static final int MAX_ALERTAS = 20;
     static final int MAX_PROPUESTAS_PENDIENTES = 3;
@@ -34,13 +41,25 @@ public class CuentaService {
     private final CategoriaRepository categorias;
     private final UsuarioRepository usuarios;
 
+    /**
+     * Votos necesarios para que una categoría propuesta se cree sola. Se configura con TONALLI_PROPUESTAS_UMBRAL
+     * porque depende del tamaño de la comunidad: con pocos usuarios, 500 votos serían inalcanzables.
+     */
+    private final int umbral;
+
     public CuentaService(AlertaRepository alertas, OfertaRepository ofertas, PropuestaRepository propuestas,
-                         CategoriaRepository categorias, UsuarioRepository usuarios) {
+                         CategoriaRepository categorias, UsuarioRepository usuarios,
+                         @Value("${tonalli.propuestas.umbral:25}") int umbral) {
         this.alertas = alertas;
         this.ofertas = ofertas;
         this.propuestas = propuestas;
         this.categorias = categorias;
         this.usuarios = usuarios;
+        this.umbral = Math.max(1, umbral);
+    }
+
+    public int getUmbral() {
+        return umbral;
     }
 
     @Transactional(readOnly = true)
@@ -78,11 +97,24 @@ public class CuentaService {
         alertas.delete(a);
     }
 
+    /** Propuestas en votación, de la más apoyada a la menos apoyada: arriba lo que está por aprobarse. */
     @Transactional(readOnly = true)
     public List<PropuestaVista> propuestas(Long usuarioId) {
         return propuestas.findByEstadoOrderByCreadaEnDesc(EstadoPropuesta.PENDIENTE).stream()
                 .map(p -> new PropuestaVista(p.getId(), p.getNombre(), p.getAutor().getNombre(),
-                        p.getApoyos().size(), p.getApoyos().contains(usuarioId)))
+                        p.getApoyos().size(), p.getApoyos().contains(usuarioId), umbral))
+                .sorted(Comparator.comparingInt(PropuestaVista::getApoyos).reversed()
+                        .thenComparing(PropuestaVista::getNombre))
+                .toList();
+    }
+
+    /** Las últimas categorías que nacieron por votación: muestran que el mecanismo funciona de verdad. */
+    @Transactional(readOnly = true)
+    public List<PropuestaVista> aprobadasRecientes() {
+        return propuestas.findByEstadoOrderByCreadaEnDesc(EstadoPropuesta.APROBADA).stream()
+                .limit(5)
+                .map(p -> new PropuestaVista(p.getId(), p.getNombre(), p.getAutor().getNombre(),
+                        p.getApoyos().size(), false, umbral))
                 .toList();
     }
 
@@ -102,11 +134,33 @@ public class CuentaService {
         propuestas.save(p);
     }
 
+    /**
+     * Apoya una propuesta o retira el apoyo si ya lo había dado. Al llegar al umbral, la categoría se crea
+     * sola y la propuesta queda aprobada: la comunidad decide, sin que un administrador tenga que intervenir.
+     *
+     * Devuelve true si la categoría se creó en esta llamada, para avisar a quien dio el voto decisivo.
+     */
     @Transactional
-    public void apoyar(Long usuarioId, Long propuestaId) {
+    public boolean apoyar(Long usuarioId, Long propuestaId) {
         Propuesta p = propuestas.findById(propuestaId)
                 .filter(x -> x.getEstado() == EstadoPropuesta.PENDIENTE)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Propuesta no encontrada"));
-        p.getApoyos().add(usuarioId); // un Set: apoyar dos veces no suma dos veces
+
+        // Los apoyos son un Set de ids: un usuario cuenta una sola vez, aunque envíe el formulario varias veces.
+        if (!p.getApoyos().add(usuarioId)) {
+            p.getApoyos().remove(usuarioId);
+            return false;
+        }
+        if (p.getApoyos().size() < umbral) {
+            return false;
+        }
+        // Alcanzó el umbral. Si alguien creó esa categoría mientras tanto, la propuesta se aprueba igual.
+        if (!categorias.existsByNombreIgnoreCase(p.getNombre())) {
+            categorias.save(new Categoria(p.getNombre(), false));
+        }
+        p.setEstado(EstadoPropuesta.APROBADA);
+        AUDITORIA.info("categoria creada por votacion propuesta={} nombre={} apoyos={}",
+                propuestaId, p.getNombre(), p.getApoyos().size());
+        return true;
     }
 }

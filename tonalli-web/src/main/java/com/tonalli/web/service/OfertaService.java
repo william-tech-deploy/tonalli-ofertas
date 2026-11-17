@@ -2,10 +2,13 @@ package com.tonalli.web.service;
 
 import com.tonalli.web.dto.CategoriaVista;
 import com.tonalli.web.dto.ComentarioVista;
+import com.tonalli.web.dto.FiltroOfertas;
 import com.tonalli.web.dto.Formato;
 import com.tonalli.web.dto.ImagenProcesada;
 import com.tonalli.web.dto.OfertaForm;
 import com.tonalli.web.dto.OfertaVista;
+import com.tonalli.web.dto.OrdenOferta;
+import com.tonalli.web.dto.TemperaturaFiltro;
 import com.tonalli.web.exception.OperacionInvalidaException;
 import com.tonalli.web.exception.RecursoNoEncontradoException;
 import com.tonalli.web.model.Categoria;
@@ -92,14 +95,47 @@ public class OfertaService {
                 .toList();
     }
 
+    /** Búsqueda simple, sin filtros: la usan la API y las alertas. */
     @Transactional(readOnly = true)
     public Page<OfertaVista> listar(String q, Long categoriaId, int pagina) {
-        String busqueda = Formato.limpiarBusqueda(q);
-        Pageable pageable = PageRequest.of(Math.min(Math.max(pagina, 0), MAX_PAGINA), TAMANO_PAGINA,
-                Sort.by(Sort.Direction.DESC, "creadaEn"));
-        Page<Oferta> resultado = categoriaId == null
-                ? ofertas.buscar(EstadoOferta.ACTIVA, busqueda, pageable)
-                : ofertas.buscarPorCategoria(EstadoOferta.ACTIVA, categoriaId, busqueda, pageable);
+        FiltroOfertas filtro = new FiltroOfertas();
+        filtro.setQ(q);
+        filtro.setCategoriaId(categoriaId);
+        filtro.setPagina(pagina);
+        return listar(filtro);
+    }
+
+    /**
+     * Catálogo con los filtros del buscador. Aquí se normaliza todo lo que escribió la persona:
+     * la búsqueda pierde los comodines de LIKE, los precios pasan a centavos y se ordenan si vienen al revés,
+     * y la página se recorta a un rango sano. El repositorio solo recibe valores ya limpios.
+     */
+    @Transactional(readOnly = true)
+    public Page<OfertaVista> listar(FiltroOfertas filtro) {
+        String busqueda = Formato.limpiarBusqueda(filtro.getQ());
+        int precioMin = filtro.getPrecioMin() == null ? 0 : Math.max(0, Formato.centavos(filtro.getPrecioMin()));
+        int precioMax = filtro.getPrecioMax() == null ? Integer.MAX_VALUE
+                : Math.max(0, Formato.centavos(filtro.getPrecioMax()));
+        if (precioMin > precioMax) { // "de 50 a 10": se entiende como "de 10 a 50" en vez de no devolver nada
+            int intercambio = precioMin;
+            precioMin = precioMax;
+            precioMax = intercambio;
+        }
+        Boolean conDescuento = filtro.isSoloConDescuento() ? Boolean.TRUE : null;
+        TemperaturaFiltro temp = filtro.getTemperatura();
+        int pagina = Math.min(Math.max(filtro.getPagina(), 0), MAX_PAGINA);
+
+        Page<Oferta> resultado = switch (filtro.getOrden()) {
+            case TEMPERATURA -> ofertas.buscarPorTemperatura(EstadoOferta.ACTIVA, busqueda, filtro.getCategoriaId(),
+                    precioMin, precioMax, conDescuento, temp.getMinimo(), temp.getMaximo(),
+                    PageRequest.of(pagina, TAMANO_PAGINA));
+            case DESCUENTO -> ofertas.buscarPorDescuento(EstadoOferta.ACTIVA, busqueda, filtro.getCategoriaId(),
+                    precioMin, precioMax, conDescuento, temp.getMinimo(), temp.getMaximo(),
+                    PageRequest.of(pagina, TAMANO_PAGINA));
+            default -> ofertas.buscarConFiltros(EstadoOferta.ACTIVA, busqueda, filtro.getCategoriaId(),
+                    precioMin, precioMax, conDescuento, temp.getMinimo(), temp.getMaximo(),
+                    PageRequest.of(pagina, TAMANO_PAGINA, ordenSimple(filtro.getOrden())));
+        };
 
         List<Long> ids = resultado.getContent().stream().map(Oferta::getId).toList();
         Map<Long, Long> temperaturas = new HashMap<>();
@@ -109,6 +145,15 @@ public class OfertaService {
             }
         }
         return resultado.map(o -> vista(o, temperaturas.getOrDefault(o.getId(), 0L)));
+    }
+
+    /** Orden por una columna de la tabla. La temperatura y el descuento no lo son: tienen su propia consulta. */
+    private static Sort ordenSimple(OrdenOferta orden) {
+        return switch (orden) {
+            case PRECIO_ASC -> Sort.by(Sort.Direction.ASC, "precioCentavos");
+            case PRECIO_DESC -> Sort.by(Sort.Direction.DESC, "precioCentavos");
+            default -> Sort.by(Sort.Direction.DESC, "creadaEn");
+        };
     }
 
     /**

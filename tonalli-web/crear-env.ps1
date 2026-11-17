@@ -24,6 +24,7 @@ $lineas = @(
   ("DB_ROOT_PASSWORD=" + (NuevaClave 28))
   "TONALLI_ADMIN_CORREO=admin@tonalli.local"
   ("TONALLI_ADMIN_PASSWORD=" + $adm)
+  "TONALLI_PROPUESTAS_UMBRAL=3"
   "TONALLI_DEMO=true"
   ("TONALLI_DEMO_PASSWORD=" + $demo)
   "BASE_URL=http://localhost:8080"

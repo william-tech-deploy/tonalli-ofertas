@@ -58,7 +58,7 @@ public class CuentaController {
 
     @GetMapping("/propuestas")
     public String propuestas(@AuthenticationPrincipal UsuarioActual usuario, Model model) {
-        model.addAttribute("propuestas", cuenta.propuestas(usuario.getId()));
+        cargarPropuestas(usuario, model);
         model.addAttribute("form", new NombreCategoriaForm());
         return "propuestas";
     }
@@ -74,15 +74,23 @@ public class CuentaController {
                 model.addAttribute("error", e.getMessage());
             }
         }
-        model.addAttribute("propuestas", cuenta.propuestas(usuario.getId()));
+        cargarPropuestas(usuario, model);
         return "propuestas";
     }
 
     @PostMapping("/propuestas/{id}/apoyar")
     public String apoyar(@PathVariable Long id, @AuthenticationPrincipal UsuarioActual usuario,
                          RedirectAttributes flash) {
-        cuenta.apoyar(usuario.getId(), id);
-        flash.addFlashAttribute("ok", "Apoyo registrado.");
+        boolean aprobada = cuenta.apoyar(usuario.getId(), id);
+        flash.addFlashAttribute("ok", aprobada
+                ? "La propuesta alcanzó los votos necesarios: la categoría ya existe."
+                : "Voto registrado.");
         return "redirect:/propuestas";
+    }
+
+    private void cargarPropuestas(UsuarioActual usuario, Model model) {
+        model.addAttribute("propuestas", cuenta.propuestas(usuario.getId()));
+        model.addAttribute("aprobadas", cuenta.aprobadasRecientes());
+        model.addAttribute("umbral", cuenta.getUmbral());
     }
 }

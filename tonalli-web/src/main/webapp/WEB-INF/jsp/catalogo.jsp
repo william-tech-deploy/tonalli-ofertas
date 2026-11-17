@@ -7,19 +7,72 @@
 <h1>Ofertas</h1>
 
 <form class="busqueda" method="get" action="<c:url value='/'/>">
-    <input type="search" name="q" value="<c:out value='${q}'/>" maxlength="60" placeholder="Buscar ofertas" aria-label="Buscar">
-    <select name="categoria" aria-label="Categoría">
-        <option value="">Todas las categorías</option>
-        <c:forEach var="c" items="${categorias}">
-            <option value="${c.id}" <c:if test="${c.id == categoriaActual}">selected</c:if>><c:out value="${c.nombre}"/></option>
-        </c:forEach>
-    </select>
-    <button type="submit">Buscar</button>
+    <%-- Un solo formulario GET: los filtros quedan en la URL, así la búsqueda se puede compartir y volver atrás. --%>
+    <div class="busqueda-fila">
+        <input type="search" name="q" value="<c:out value='${q}'/>" maxlength="60" placeholder="Buscar ofertas" aria-label="Buscar">
+        <select name="categoria" aria-label="Categoría">
+            <option value="">Todas las categorías</option>
+            <c:forEach var="c" items="${categorias}">
+                <option value="${c.id}" <c:if test="${c.id == filtro.categoriaId}">selected</c:if>><c:out value="${c.nombre}"/></option>
+            </c:forEach>
+        </select>
+        <button type="submit">Buscar</button>
+    </div>
+
+    <details class="filtros" <c:if test="${filtro.hayFiltros}">open</c:if>>
+        <summary>Más filtros</summary>
+        <div class="filtros-campos">
+            <div class="campo">
+                <label for="precioMin">Precio desde (USD)</label>
+                <input id="precioMin" name="precioMin" inputmode="decimal" maxlength="10"
+                       value="<c:if test='${filtro.precioMin != null}'><fmt:formatNumber value='${filtro.precioMin}' maxFractionDigits='2' groupingUsed='false'/></c:if>">
+            </div>
+            <div class="campo">
+                <label for="precioMax">Precio hasta (USD)</label>
+                <input id="precioMax" name="precioMax" inputmode="decimal" maxlength="10"
+                       value="<c:if test='${filtro.precioMax != null}'><fmt:formatNumber value='${filtro.precioMax}' maxFractionDigits='2' groupingUsed='false'/></c:if>">
+            </div>
+            <div class="campo">
+                <label for="temperatura">Temperatura</label>
+                <select id="temperatura" name="temperatura">
+                    <c:forEach var="t" items="${temperaturas}">
+                        <option value="${t}" <c:if test="${t == filtro.temperatura}">selected</c:if>><c:out value="${t.etiqueta}"/></option>
+                    </c:forEach>
+                </select>
+            </div>
+            <div class="campo">
+                <label for="orden">Ordenar por</label>
+                <select id="orden" name="orden">
+                    <c:forEach var="o" items="${ordenes}">
+                        <option value="${o}" <c:if test="${o == filtro.orden}">selected</c:if>><c:out value="${o.etiqueta}"/></option>
+                    </c:forEach>
+                </select>
+            </div>
+            <div class="campo campo-casilla">
+                <input id="conDescuento" type="checkbox" name="conDescuento" value="1" <c:if test="${filtro.soloConDescuento}">checked</c:if>>
+                <label for="conDescuento">Solo con precio anterior</label>
+            </div>
+        </div>
+        <div class="filtros-acciones">
+            <button type="submit">Aplicar filtros</button>
+            <c:if test="${filtro.hayFiltros}">
+                <a class="boton-tienda" href="<c:url value='/'/>">Quitar filtros</a>
+            </c:if>
+        </div>
+    </details>
 </form>
+
+<p class="meta resultado">
+    <c:out value="${pagina.totalElements}"/>
+    <c:choose><c:when test="${pagina.totalElements == 1}"> oferta encontrada</c:when><c:otherwise> ofertas encontradas</c:otherwise></c:choose>
+    · ordenadas por <c:out value="${filtro.orden.etiqueta}"/>
+</p>
 
 <c:choose>
     <c:when test="${empty pagina.content}">
-        <p>No hay ofertas que coincidan con tu búsqueda.</p>
+        <p>No hay ofertas que coincidan con tu búsqueda.
+            <c:if test="${filtro.hayFiltros}"><a href="<c:url value='/'/>">Quitar los filtros</a>.</c:if>
+        </p>
     </c:when>
     <c:otherwise>
         <ul class="ofertas">
@@ -49,11 +102,17 @@
             </c:forEach>
         </ul>
 
+        <%-- Los enlaces de página arrastran los mismos filtros, para no perderlos al avanzar. --%>
         <nav class="paginas" aria-label="Páginas">
             <c:if test="${pagina.number > 0}">
                 <c:url var="anterior" value="/">
                     <c:param name="q" value="${q}"/>
-                    <c:param name="categoria" value="${categoriaActual}"/>
+                    <c:param name="categoria" value="${filtro.categoriaId}"/>
+                    <c:param name="precioMin" value="${filtro.precioMin}"/>
+                    <c:param name="precioMax" value="${filtro.precioMax}"/>
+                    <c:if test="${filtro.soloConDescuento}"><c:param name="conDescuento" value="1"/></c:if>
+                    <c:param name="temperatura" value="${filtro.temperatura}"/>
+                    <c:param name="orden" value="${filtro.orden}"/>
                     <c:param name="pagina" value="${pagina.number - 1}"/>
                 </c:url>
                 <a href="<c:out value='${anterior}'/>">← Anterior</a>
@@ -62,7 +121,12 @@
             <c:if test="${pagina.number + 1 < pagina.totalPages}">
                 <c:url var="siguiente" value="/">
                     <c:param name="q" value="${q}"/>
-                    <c:param name="categoria" value="${categoriaActual}"/>
+                    <c:param name="categoria" value="${filtro.categoriaId}"/>
+                    <c:param name="precioMin" value="${filtro.precioMin}"/>
+                    <c:param name="precioMax" value="${filtro.precioMax}"/>
+                    <c:if test="${filtro.soloConDescuento}"><c:param name="conDescuento" value="1"/></c:if>
+                    <c:param name="temperatura" value="${filtro.temperatura}"/>
+                    <c:param name="orden" value="${filtro.orden}"/>
                     <c:param name="pagina" value="${pagina.number + 1}"/>
                 </c:url>
                 <a href="<c:out value='${siguiente}'/>">Siguiente →</a>

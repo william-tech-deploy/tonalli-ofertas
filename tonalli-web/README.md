@@ -41,7 +41,8 @@ mvn test
 
 Hay pruebas unitarias (formato, bloqueo por intentos, token, peso del voto), de reglas de negocio con H2
 (`OfertaFlujoTest`) y de seguridad de punta a punta (`SeguridadWebTest`): rutas protegidas, CSRF, cabeceras,
-login correcto e incorrecto y bloqueo tras 5 fallos. `VistasJspTest` arranca el Tomcat real y dibuja los JSP de
+login correcto e incorrecto y bloqueo tras 5 fallos. `CatalogoFiltrosTest` cubre el buscador (rango de precios, solo con descuento, temperatura y los tres órdenes) y
+`VotacionCategoriasTest` la votación de categorías. `VistasJspTest` arranca el Tomcat real y dibuja los JSP de
 verdad: detecta bucles de redirección y acentos rotos, que MockMvc no ve.
 
 ## 3. Desplegar con Docker (MySQL + aplicación)
@@ -59,7 +60,7 @@ docker compose ps            # db y web deben decir (healthy)
 Abre <http://localhost:8080>. Si cambias la contraseña de MySQL después del primer arranque, borra también el
 volumen (`docker compose down -v`): MySQL solo lee esas variables la primera vez.
 
-**Datos de ejemplo:** con `TONALLI_DEMO=true` en el `.env` (el script lo pone), el sitio carga 5 usuarios y 15 ofertas
+**Datos de ejemplo:** con `TONALLI_DEMO=true` en el `.env` (el script lo pone), el sitio carga 5 usuarios y 27 ofertas
 de tiendas de El Salvador la primera vez que arranca con la base vacía. Los precios y enlaces se copiaron de las
 páginas públicas de las tiendas el 10 de noviembre de 2026 y pueden haber cambiado. Los cinco usuarios
 (`demo@`, `ana.martinez@`, `carlos.rivas@`, `sofia.hernandez@` y `diego.flores@tonalli.local`) comparten la contraseña
