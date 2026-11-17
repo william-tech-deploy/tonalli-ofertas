@@ -4,6 +4,7 @@
 <c:set var="titulo" value="Gráficos de actividad" scope="request"/>
 <%@ include file="/WEB-INF/jsp/fragmentos/cabecera.jspf" %>
 
+<p class="meta"><a href="<c:url value='/admin'/>">← Administración</a></p>
 <h1>Actividad del sitio</h1>
 
 <div class="graficos">

@@ -12,6 +12,8 @@ public interface ReporteRepository extends JpaRepository<Reporte, Long> {
     @EntityGraph(attributePaths = {"oferta", "reportante"})
     List<Reporte> findByEstadoOrderByCreadoEnAsc(EstadoReporte estado);
 
+    long countByEstado(EstadoReporte estado);
+
     boolean existsByReportanteIdAndOfertaId(Long reportanteId, Long ofertaId);
 
     @Query("select r.motivo, count(r) from Reporte r group by r.motivo")

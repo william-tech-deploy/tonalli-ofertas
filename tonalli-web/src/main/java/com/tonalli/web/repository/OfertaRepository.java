@@ -46,6 +46,12 @@ public interface OfertaRepository extends JpaRepository<Oferta, Long> {
 
     long countByAutorIdAndCreadaEnAfter(Long autorId, Instant desde);
 
+    /** Ofertas de un autor, sin las eliminadas, de la más nueva a la más antigua (panel "Mi cuenta"). */
+    @EntityGraph(attributePaths = {"categoria", "autor"})
+    List<Oferta> findByAutorIdAndEstadoNotOrderByCreadaEnDesc(Long autorId, EstadoOferta estado, Pageable pageable);
+
+    long countByEstado(EstadoOferta estado);
+
     boolean existsByCategoriaId(Long categoriaId);
 
     @Query("select c.nombre, count(o) from Oferta o join o.categoria c "

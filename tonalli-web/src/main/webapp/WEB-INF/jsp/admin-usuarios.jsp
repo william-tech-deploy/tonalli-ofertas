@@ -4,6 +4,7 @@
 <c:set var="titulo" value="Usuarios" scope="request"/>
 <%@ include file="/WEB-INF/jsp/fragmentos/cabecera.jspf" %>
 
+<p class="meta"><a href="<c:url value='/admin'/>">← Administración</a></p>
 <h1>Usuarios</h1>
 <p>Al cambiar el rol de un usuario se cierran sus sesiones abiertas.</p>
 

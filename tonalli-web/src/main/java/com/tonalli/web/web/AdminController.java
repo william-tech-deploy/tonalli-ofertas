@@ -27,6 +27,13 @@ public class AdminController {
         this.admin = admin;
     }
 
+    /** Inicio del panel: cifras y accesos a cada sección. */
+    @GetMapping("/admin")
+    public String inicio(Model model) {
+        model.addAttribute("resumen", admin.resumen());
+        return "admin-inicio";
+    }
+
     @GetMapping("/admin/usuarios")
     public String usuarios(@RequestParam(defaultValue = "0") int pagina, Model model) {
         model.addAttribute("pagina", admin.usuarios(pagina));

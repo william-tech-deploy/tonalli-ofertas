@@ -49,6 +49,25 @@ class SeguridadWebTest {
     }
 
     @Test
+    void sinSesionMiCuentaRedirigeAlLogin() throws Exception {
+        mvc.perform(get("/cuenta"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    @Test
+    @WithMockUser(roles = "USER")
+    void unUsuarioNormalNoEntraAlInicioDeAdministracion() throws Exception {
+        mvc.perform(get("/admin")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "MODERADOR")
+    void unModeradorTampocoEntraAAdministracion() throws Exception {
+        mvc.perform(get("/admin")).andExpect(status().isForbidden());
+    }
+
+    @Test
     void sinSesionElPanelDeAdminRedirigeAlLogin() throws Exception {
         mvc.perform(get("/admin/usuarios"))
                 .andExpect(status().is3xxRedirection())
