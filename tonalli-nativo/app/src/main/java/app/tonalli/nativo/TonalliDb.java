@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Base de datos local SQLite (tema T10-A).
@@ -18,7 +19,7 @@ import java.util.Locale;
 public class TonalliDb extends SQLiteOpenHelper {
 
     private static final String NOMBRE = "tonalli.db";
-    private static final int VERSION = 1;
+    private static final int VERSION = 2; // 2: columnas ean y autor
 
     public TonalliDb(Context context) {
         super(context.getApplicationContext(), NOMBRE, null, VERSION);
@@ -40,6 +41,8 @@ public class TonalliDb extends SQLiteOpenHelper {
                 "lat REAL NOT NULL DEFAULT 0," +
                 "lng REAL NOT NULL DEFAULT 0," +
                 "foto BLOB," +
+                "ean TEXT," +
+                "autor TEXT," +
                 "fecha INTEGER NOT NULL)");
         db.execSQL("CREATE TABLE alertas (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -48,25 +51,33 @@ public class TonalliDb extends SQLiteOpenHelper {
         sembrar(db);
     }
 
+    /** Migración: agrega columnas sin borrar los datos que ya tiene el teléfono. */
     @Override
     public void onUpgrade(SQLiteDatabase db, int anterior, int nueva) {
-        db.execSQL("DROP TABLE IF EXISTS ofertas");
-        db.execSQL("DROP TABLE IF EXISTS alertas");
-        onCreate(db);
+        if (anterior < 2) {
+            db.execSQL("ALTER TABLE ofertas ADD COLUMN ean TEXT");
+            db.execSQL("ALTER TABLE ofertas ADD COLUMN autor TEXT");
+            String[][] codigos = {{"Leche en polvo entera 800 g", "7412345000110"}, {"Arroz blanco 5 lb", "7412345000288"},
+                    {"Audífonos Bluetooth", "7412345000356"}, {"Memoria USB 64 GB", "7412345000424"},
+                    {"Camisa polo algodón", "7412345000592"}};
+            for (String[] c : codigos) {
+                db.execSQL("UPDATE ofertas SET ean = ? WHERE titulo = ? AND remota IS NULL", new Object[]{c[1], c[0]});
+            }
+        }
     }
 
     /** Ofertas de ejemplo (tiendas ficticias en Santa Ana) para que la app no abra vacía. */
     private void sembrar(SQLiteDatabase db) {
         long ahora = System.currentTimeMillis();
-        semilla(db, "Leche en polvo entera 800 g", "Súper Familiar", "Supermercado", 7.20, 5.45, 238, 12, 13.9942, -89.5597, ahora - 3600000L);
-        semilla(db, "Arroz blanco 5 lb", "Autoservicio Don Pepe", "Supermercado", 3.10, 2.45, 64, 9, 13.9895, -89.5561, ahora - 7200000L);
-        semilla(db, "Audífonos Bluetooth", "TecnoPlaza", "Tecnología", 59.90, 39.90, 121, 18, 13.9978, -89.5632, ahora - 10800000L);
-        semilla(db, "Memoria USB 64 GB", "TecnoPlaza", "Tecnología", 12.00, 10.50, 14, 31, 13.9978, -89.5632, ahora - 86400000L);
-        semilla(db, "Camisa polo algodón", "Almacén La Central", "Ropa", 18.00, 11.99, 47, 5, 13.9921, -89.5548, ahora - 172800000L);
+        semilla(db, "Leche en polvo entera 800 g", "Súper Familiar", "Supermercado", 7.20, 5.45, 238, 12, 13.9942, -89.5597, ahora - 3600000L, "7412345000110");
+        semilla(db, "Arroz blanco 5 lb", "Autoservicio Don Pepe", "Supermercado", 3.10, 2.45, 64, 9, 13.9895, -89.5561, ahora - 7200000L, "7412345000288");
+        semilla(db, "Audífonos Bluetooth", "TecnoPlaza", "Tecnología", 59.90, 39.90, 121, 18, 13.9978, -89.5632, ahora - 10800000L, "7412345000356");
+        semilla(db, "Memoria USB 64 GB", "TecnoPlaza", "Tecnología", 12.00, 10.50, 14, 31, 13.9978, -89.5632, ahora - 86400000L, "7412345000424");
+        semilla(db, "Camisa polo algodón", "Almacén La Central", "Ropa", 18.00, 11.99, 47, 5, 13.9921, -89.5548, ahora - 172800000L, "7412345000592");
     }
 
     private void semilla(SQLiteDatabase db, String titulo, String tienda, String categoria,
-                         double antes, double ahora, int up, int down, double lat, double lng, long fecha) {
+                         double antes, double ahora, int up, int down, double lat, double lng, long fecha, String ean) {
         ContentValues v = new ContentValues();
         v.put("titulo", titulo);
         v.put("tienda", tienda);
@@ -78,20 +89,30 @@ public class TonalliDb extends SQLiteOpenHelper {
         v.put("lat", lat);
         v.put("lng", lng);
         v.put("fecha", fecha);
+        v.put("ean", ean);
         db.insert("ofertas", null, v);
     }
 
     // ---------------------------------------------------------------- ofertas
 
     private static final String COLUMNAS_LISTA =
-            "id, remota, titulo, tienda, categoria, precio_antes, precio_ahora, votos_up, votos_down, mi_voto, lat, lng, fecha";
+            "id, remota, titulo, tienda, categoria, precio_antes, precio_ahora, votos_up, votos_down, mi_voto, lat, lng, fecha, ean, autor";
+
+    /** Orden de la lista: por temperatura (calientes) o por fecha (nuevas). */
+    public static final int ORDEN_CALIENTES = 0;
+    public static final int ORDEN_NUEVAS = 1;
 
     /** Lista las ofertas; categoria null o "Todas" = sin filtro. La foto no se carga aquí (pesa). */
     public List<Oferta> listar(String categoria) {
+        return listar(categoria, ORDEN_CALIENTES);
+    }
+
+    public List<Oferta> listar(String categoria, int tipoOrden) {
         List<Oferta> lista = new ArrayList<>();
         SQLiteDatabase db = getReadableDatabase();
         Cursor c;
-        String orden = " ORDER BY (votos_up - votos_down) DESC, fecha DESC";
+        String orden = tipoOrden == ORDEN_NUEVAS ? " ORDER BY fecha DESC"
+                : " ORDER BY (votos_up - votos_down) DESC, fecha DESC";
         if (categoria == null || categoria.equals("Todas")) {
             c = db.rawQuery("SELECT " + COLUMNAS_LISTA + " FROM ofertas" + orden, null);
         } else {
@@ -132,7 +153,9 @@ public class TonalliDb extends SQLiteOpenHelper {
         o.lat = c.getDouble(10);
         o.lng = c.getDouble(11);
         o.fecha = c.getLong(12);
-        if (conFoto && !c.isNull(13)) o.foto = c.getBlob(13);
+        o.ean = c.isNull(13) ? null : c.getString(13);
+        o.autor = c.isNull(14) ? null : c.getString(14);
+        if (conFoto && !c.isNull(15)) o.foto = c.getBlob(15);
         return o;
     }
 
@@ -154,9 +177,11 @@ public class TonalliDb extends SQLiteOpenHelper {
         v.put("remota", o.remota);
         v.put("votos_up", o.up);
         v.put("votos_down", o.down);
+        v.put("autor", o.autor);
         int cambiadas = db.update("ofertas", v, "remota = ?", new String[]{o.remota});
         if (cambiadas > 0) return -1;
-        v.put("fecha", System.currentTimeMillis());
+        v.put("fecha", o.fecha > 0 ? o.fecha : System.currentTimeMillis());
+        if (o.foto != null) v.put("foto", o.foto);
         return db.insert("ofertas", null, v);
     }
 
@@ -169,7 +194,62 @@ public class TonalliDb extends SQLiteOpenHelper {
         v.put("precio_ahora", o.ahora);
         v.put("lat", o.lat);
         v.put("lng", o.lng);
+        v.put("ean", o.ean);
         return v;
+    }
+
+    /** Borra las ofertas de Supabase que ya no existen en el servidor. */
+    public void borrarRemotasQueNoEstan(Set<String> vigentes) {
+        SQLiteDatabase db = getWritableDatabase();
+        Cursor c = db.rawQuery("SELECT id, remota FROM ofertas WHERE remota LIKE 'sb-%'", null);
+        try {
+            while (c.moveToNext()) {
+                if (!vigentes.contains(c.getString(1))) eliminar(c.getLong(0));
+            }
+        } finally {
+            c.close();
+        }
+    }
+
+    /** Pone "mi voto" en las ofertas de Supabase según lo que dice el servidor. */
+    public void aplicarMisVotos(java.util.Map<String, Integer> votos) {
+        SQLiteDatabase db = getWritableDatabase();
+        db.beginTransaction();
+        try {
+            db.execSQL("UPDATE ofertas SET mi_voto = 0 WHERE remota LIKE 'sb-%'");
+            for (java.util.Map.Entry<String, Integer> e : votos.entrySet()) {
+                db.execSQL("UPDATE ofertas SET mi_voto = ? WHERE remota = ?", new Object[]{e.getValue(), e.getKey()});
+            }
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
+    /** Guarda los votos que devolvió el servidor después de votar. */
+    public void actualizarVotos(long id, int up, int down, int miVoto) {
+        ContentValues v = new ContentValues();
+        v.put("votos_up", up);
+        v.put("votos_down", down);
+        v.put("mi_voto", miVoto);
+        getWritableDatabase().update("ofertas", v, "id = ?", new String[]{String.valueOf(id)});
+    }
+
+    /** Busca por código de barras exacto o por palabra en el título o la tienda. */
+    public List<Oferta> buscar(String texto) {
+        List<Oferta> lista = new ArrayList<>();
+        String t = texto == null ? "" : texto.trim();
+        if (t.isEmpty()) return lista;
+        String patron = "%" + t.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
+        Cursor c = getReadableDatabase().rawQuery("SELECT " + COLUMNAS_LISTA + " FROM ofertas WHERE ean = ? "
+                        + "OR titulo LIKE ? ESCAPE '\\' OR tienda LIKE ? ESCAPE '\\' ORDER BY precio_ahora ASC",
+                new String[]{t, patron, patron});
+        try {
+            while (c.moveToNext()) lista.add(leer(c, false));
+        } finally {
+            c.close();
+        }
+        return lista;
     }
 
     /** Registra tu voto (1, -1 o 0 para quitarlo) y ajusta los contadores. */

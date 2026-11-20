@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Barra inferior, igual que en la versión web. -->
+<!-- Barra inferior: las mismas cinco secciones que la versión web. -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/nav_inicio" android:icon="@drawable/ic_home" android:title="Inicio" />
-    <item android:id="@+id/nav_cerca" android:icon="@drawable/ic_pin" android:title="Cerca" />
-    <item android:id="@+id/nav_publicar" android:icon="@drawable/ic_plus" android:title="Publicar" />
+    <item android:id="@+id/nav_escaner" android:icon="@drawable/ic_scan" android:title="Escáner" />
+    <item android:id="@+id/nav_publicar" android:icon="@drawable/ic_publicar" android:title="Publicar" />
     <item android:id="@+id/nav_alertas" android:icon="@drawable/ic_bell" android:title="Alertas" />
+    <item android:id="@+id/nav_perfil" android:icon="@drawable/ic_user" android:title="Perfil" />
 </menu>

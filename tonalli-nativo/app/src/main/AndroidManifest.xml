@@ -23,6 +23,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:usesCleartextTraffic="false"
+        android:networkSecurityConfig="@xml/red"
         android:theme="@style/Theme.Tonalli">
 
         <activity
@@ -33,6 +34,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Descarga el módulo del escáner al instalar, para que funcione rápido la primera vez. -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="barcode_ui" />
 
         <activity
             android:name=".DetalleActivity"
@@ -52,6 +58,20 @@
             android:exported="false"
             android:label="@string/alertas"
             android:parentActivityName=".MainActivity"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".EscanerActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".PerfilActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false"
             android:windowSoftInputMode="adjustResize" />
     </application>
 

@@ -25,30 +25,41 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.button.MaterialButtonToggleGroup;
 import com.google.android.material.tabs.TabLayout;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
  * Pantalla principal: lista de ofertas.
  * Temas: T4 (Activity + Intents), T5 (controles), T7 (menú de opciones, menú contextual, ActionBar),
- * T10-A (lee SQLite), T10-B (sincroniza con el servicio web), T11 (ordena por cercanía con GPS).
+ * T10-A (lee SQLite), T10-B (sincroniza con Supabase o con el JSON), T11 (ordena por cercanía con GPS).
  */
 public class MainActivity extends AppCompatActivity {
+
+    private static final int ORDEN_CERCA = 2;
 
     private TonalliDb db;
     private final List<Oferta> ofertas = new ArrayList<>();
     private OfertaAdapter adapter;
     private TabLayout tabs;
     private BottomNavigationView nav;
-    private TextView tvVacio, tvOrden;
+    private MaterialButtonToggleGroup grupoOrden;
+    private TextView tvVacio, tvNota;
     private String categoria = "Todas";
-    private boolean porCercania = false;
+    private int orden = TonalliDb.ORDEN_CALIENTES;
     private Location miUbicacion = null;
     private final ExecutorService hiloDeFondo = Executors.newSingleThreadExecutor();
 
@@ -70,13 +81,15 @@ public class MainActivity extends AppCompatActivity {
         Notificador.crearCanal(this);
 
         tvVacio = findViewById(R.id.tvVacio);
-        tvOrden = findViewById(R.id.tvOrden);
+        tvNota = findViewById(R.id.tvNota);
         ListView lista = findViewById(R.id.lvOfertas);
 
-        // Pestañas de categoría: una por cada texto del arreglo filtro_categorias (strings.xml).
+        // Pestañas de categoría con su ícono, igual que la versión web.
         tabs = findViewById(R.id.tabs);
         for (String nombre : getResources().getStringArray(R.array.filtro_categorias)) {
-            tabs.addTab(tabs.newTab().setText(nombre));
+            TabLayout.Tab t = tabs.newTab().setText(nombre);
+            if (!nombre.equals("Todas")) t.setIcon(Marca.iconoCategoria(nombre));
+            tabs.addTab(t);
         }
         tabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
@@ -94,34 +107,28 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        // Selector Calientes / Nuevas / Cerca.
+        grupoOrden = findViewById(R.id.grupoOrden);
+        grupoOrden.addOnButtonCheckedListener((grupo, id, marcado) -> {
+            if (!marcado) return;
+            if (id == R.id.btnCalientes) {
+                orden = TonalliDb.ORDEN_CALIENTES;
+                cargar();
+            } else if (id == R.id.btnNuevas) {
+                orden = TonalliDb.ORDEN_NUEVAS;
+                cargar();
+            } else if (id == R.id.btnCerca) {
+                pedirCercania();
+            }
+        });
+
         adapter = new OfertaAdapter(this, ofertas);
         lista.setAdapter(adapter);
         lista.setEmptyView(tvVacio);
         // Toque corto: abre el detalle pasando el id con un Intent explícito.
-        lista.setOnItemClickListener((parent, view, position, id) -> abrirDetalle(ofertas.get(position)));
+        lista.setOnItemClickListener((parent, view, position, id) -> abrirDetalle(this, ofertas.get(position)));
         // Toque largo: menú contextual.
         registerForContextMenu(lista);
-
-        // Barra inferior: Inicio y Cerca cambian el orden de la lista; Publicar y Alertas abren otra pantalla.
-        nav = findViewById(R.id.nav);
-        nav.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-            if (id == R.id.nav_inicio) {
-                porCercania = false;
-                cargar();
-                return true;
-            } else if (id == R.id.nav_cerca) {
-                pedirCercania();
-                return porCercania;
-            } else if (id == R.id.nav_publicar) {
-                publicarLauncher.launch(new Intent(this, PublicarActivity.class));
-                return false;
-            } else if (id == R.id.nav_alertas) {
-                startActivity(new Intent(this, AlertasActivity.class));
-                return false;
-            }
-            return false;
-        });
 
         // Cuando PublicarActivity termina con RESULT_OK se recarga la lista.
         publicarLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
@@ -131,16 +138,34 @@ public class MainActivity extends AppCompatActivity {
         permisoUbicacionLauncher = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
                 permisos -> {
                     if (Ubicacion.tienePermiso(this)) ordenarPorCercania();
-                    else Toast.makeText(this, "Sin permiso de ubicación no se puede ordenar por cercanía", Toast.LENGTH_LONG).show();
+                    else {
+                        Toast.makeText(this, "Sin permiso de ubicación no se puede ordenar por cercanía", Toast.LENGTH_LONG).show();
+                        grupoOrden.check(R.id.btnCalientes);
+                    }
                 });
         permisoNotificacionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(),
                 concedido -> {
                 });
 
+        // Barra inferior: igual que la versión web.
+        nav = findViewById(R.id.nav);
+        nav.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.nav_inicio) return true;
+            if (id == R.id.nav_escaner) startActivity(new Intent(this, EscanerActivity.class));
+            else if (id == R.id.nav_publicar) publicarLauncher.launch(new Intent(this, PublicarActivity.class));
+            else if (id == R.id.nav_alertas) startActivity(new Intent(this, AlertasActivity.class));
+            else if (id == R.id.nav_perfil) startActivity(new Intent(this, PerfilActivity.class));
+            return false; // la pestaña marcada sigue siendo Inicio
+        });
+
         // Android 13+: las notificaciones se piden en pantalla.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !Notificador.tienePermiso(this)) {
             permisoNotificacionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
         }
+
+        // Con Supabase configurado, al abrir se traen las ofertas de la comunidad.
+        if (savedInstanceState == null && Supabase.configurado()) sincronizar(false);
     }
 
     @Override
@@ -155,20 +180,22 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    /** Lee las ofertas de SQLite según el filtro y refresca la lista. */
+    /** Lee las ofertas de SQLite según la pestaña y el orden, y refresca la lista. */
     private void cargar() {
         ofertas.clear();
-        ofertas.addAll(db.listar(categoria));
-        if (porCercania && miUbicacion != null) aplicarDistancias();
+        ofertas.addAll(db.listar(categoria, orden == TonalliDb.ORDEN_NUEVAS ? TonalliDb.ORDEN_NUEVAS : TonalliDb.ORDEN_CALIENTES));
+        if (orden == ORDEN_CERCA && miUbicacion != null) aplicarDistancias();
         adapter.notifyDataSetChanged();
-        tvOrden.setText(porCercania && miUbicacion != null ? "Más cercanas primero" : "Más calientes primero");
         tvVacio.setText("No hay ofertas en esta categoría.\nPublica la primera con el botón Publicar.");
+        tvNota.setText(Supabase.configurado()
+                ? "Ofertas de la comunidad (Supabase) y de este teléfono."
+                : "Datos de ejemplo guardados en este teléfono.");
     }
 
-    private void abrirDetalle(Oferta o) {
-        Intent i = new Intent(this, DetalleActivity.class);
+    public static void abrirDetalle(AppCompatActivity a, Oferta o) {
+        Intent i = new Intent(a, DetalleActivity.class);
         i.putExtra(DetalleActivity.EXTRA_ID, o.id);
-        startActivity(i);
+        a.startActivity(i);
     }
 
     // ------------------------------------------------------------ menú de opciones (ActionBar)
@@ -182,23 +209,21 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.op_sincronizar) {
-            sincronizar();
+        if (id == R.id.op_alertas) {
+            startActivity(new Intent(this, AlertasActivity.class));
+            return true;
+        } else if (id == R.id.op_sincronizar) {
+            sincronizar(true);
             return true;
         } else if (id == R.id.op_cercanas) {
-            pedirCercania();
-            return true;
-        } else if (id == R.id.op_temperatura) {
-            nav.setSelectedItemId(R.id.nav_inicio);
-            return true;
-        } else if (id == R.id.op_alertas) {
-            startActivity(new Intent(this, AlertasActivity.class));
+            grupoOrden.check(R.id.btnCerca);
             return true;
         } else if (id == R.id.op_acerca) {
             new AlertDialog.Builder(this)
                     .setTitle("Tonalli")
                     .setMessage("Ofertas con temperatura real.\n\nVersión nativa (prototipo 2).\n"
-                            + "Los datos se guardan en SQLite dentro del teléfono y se sincronizan con un servicio web en JSON.")
+                            + "Los datos se guardan en SQLite dentro del teléfono y se sincronizan con "
+                            + (Supabase.configurado() ? "Supabase." : "un servicio web en JSON."))
                     .setPositiveButton("Cerrar", null)
                     .show();
             return true;
@@ -223,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
         Oferta o = ofertas.get(info.position);
         int id = item.getItemId();
         if (id == R.id.ctx_ver) {
-            abrirDetalle(o);
+            abrirDetalle(this, o);
             return true;
         } else if (id == R.id.ctx_compartir) {
             compartir(this, o);
@@ -286,13 +311,12 @@ public class MainActivity extends AppCompatActivity {
             if (isFinishing() || isDestroyed()) return;
             if (ubicacion == null) {
                 Toast.makeText(this, "No se pudo obtener la ubicación. Activa el GPS e inténtalo de nuevo.", Toast.LENGTH_LONG).show();
+                grupoOrden.check(R.id.btnCalientes);
                 return;
             }
             miUbicacion = ubicacion;
-            porCercania = true;
+            orden = ORDEN_CERCA;
             cargar();
-            nav.getMenu().findItem(R.id.nav_cerca).setChecked(true);
-            Toast.makeText(this, "Ordenadas de la más cercana a la más lejana", Toast.LENGTH_SHORT).show();
         });
     }
 
@@ -315,25 +339,40 @@ public class MainActivity extends AppCompatActivity {
 
     // ------------------------------------------------------------ servicio web
 
-    /** Descarga el JSON en un hilo de fondo, lo guarda en SQLite y vuelve al hilo principal para refrescar. */
-    private void sincronizar() {
-        Toast.makeText(this, "Sincronizando…", Toast.LENGTH_SHORT).show();
+    /**
+     * Descarga ofertas en un hilo de fondo (Supabase si está configurado; si no, el JSON de ejemplo),
+     * las guarda en SQLite y vuelve al hilo principal para refrescar la lista.
+     */
+    private void sincronizar(boolean avisar) {
+        if (avisar) Toast.makeText(this, "Sincronizando…", Toast.LENGTH_SHORT).show();
+        final android.content.Context app = getApplicationContext();
         hiloDeFondo.execute(() -> {
             String mensaje;
             try {
-                List<Oferta> remotas = ServicioWeb.descargar();
-                int nuevas = 0;
-                for (Oferta o : remotas) {
-                    long idNueva = db.guardarRemota(o);
-                    if (idNueva > 0) {
-                        nuevas++;
-                        o.id = idNueva;
-                        // Si la oferta nueva cumple una alerta, se avisa con una notificación.
-                        TonalliDb.Alerta alerta = db.alertaPara(o);
-                        if (alerta != null) Notificador.avisar(getApplicationContext(), o, alerta);
+                List<Oferta> remotas;
+                if (Supabase.configurado()) {
+                    Sesion s = Supabase.sesionVigente(app);
+                    remotas = Supabase.ofertas(s == null ? null : s.accessToken);
+                    Set<String> vigentes = new HashSet<>();
+                    for (Oferta o : remotas) vigentes.add(o.remota);
+                    if (remotas.size() < 200) db.borrarRemotasQueNoEstan(vigentes);
+                    guardarYAvisar(app, remotas);
+                    Map<String, Integer> mios = new HashMap<>();
+                    if (s != null) {
+                        JSONArray v = Supabase.misVotos(s);
+                        for (int i = 0; i < v.length(); i++) {
+                            JSONObject j = v.getJSONObject(i);
+                            mios.put("sb-" + j.getLong("oferta"), j.getInt("valor"));
+                        }
                     }
+                    db.aplicarMisVotos(mios);
+                } else {
+                    remotas = ServicioWeb.descargar();
+                    guardarYAvisar(app, remotas);
                 }
-                mensaje = remotas.size() + " ofertas recibidas, " + nuevas + " nuevas";
+                mensaje = remotas.size() + " ofertas sincronizadas";
+            } catch (Supabase.ErrorApi e) {
+                mensaje = e.getMessage();
             } catch (Exception e) {
                 mensaje = "No se pudo sincronizar: revisa tu conexión";
             }
@@ -341,8 +380,20 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 if (isFinishing() || isDestroyed()) return;
                 cargar();
-                Toast.makeText(this, texto, Toast.LENGTH_LONG).show();
+                if (avisar) Toast.makeText(this, texto, Toast.LENGTH_LONG).show();
             });
         });
+    }
+
+    /** Guarda en SQLite y, si una oferta nueva cumple una alerta, avisa con una notificación. */
+    private void guardarYAvisar(android.content.Context app, List<Oferta> remotas) {
+        for (Oferta o : remotas) {
+            long idNueva = db.guardarRemota(o);
+            if (idNueva > 0) {
+                o.id = idNueva;
+                TonalliDb.Alerta alerta = db.alertaPara(o);
+                if (alerta != null) Notificador.avisar(app, o, alerta);
+            }
+        }
     }
 }

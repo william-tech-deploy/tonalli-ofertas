@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chip de categoría del formulario Publicar. -->
+<com.google.android.material.chip.Chip xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/Widget.Material3.Chip.Filter"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:checkable="true"
+    android:textSize="15sp"
+    android:textStyle="bold"
+    app:checkedIconVisible="false"
+    app:chipBackgroundColor="@color/chip_fondo"
+    app:chipCornerRadius="20dp"
+    app:chipIconTint="@color/tonalli_on_surface"
+    app:chipIconVisible="true"
+    app:chipMinHeight="44dp"
+    app:chipStrokeColor="@color/chip_borde"
+    app:chipStrokeWidth="1.5dp" />

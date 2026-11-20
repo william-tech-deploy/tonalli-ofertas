@@ -34,21 +34,16 @@
 
             <TextView
                 style="@style/TonalliEtiqueta"
-                android:labelFor="@+id/spCategoria"
                 android:text="Categoría" />
 
-            <FrameLayout
+            <!-- Los chips se agregan desde PublicarActivity, uno por categoría. -->
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/grupoCategoria"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:background="@drawable/bg_campo">
-
-                <Spinner
-                    android:id="@+id/spCategoria"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:paddingStart="6dp"
-                    android:paddingEnd="6dp" />
-            </FrameLayout>
+                android:layout_height="wrap_content"
+                app:chipSpacingHorizontal="10dp"
+                app:selectionRequired="true"
+                app:singleSelection="true" />
 
             <TextView
                 style="@style/TonalliEtiqueta"
@@ -119,6 +114,37 @@
                 android:inputType="numberDecimal"
                 android:maxLength="9" />
                 </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                style="@style/TonalliEtiqueta"
+                android:labelFor="@+id/etCodigo"
+                android:text="Código de barras (opcional)" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/etCodigo"
+                    style="@style/TonalliCampo"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:hint="Escanea o escribe el número"
+                    android:inputType="number"
+                    android:maxLength="14" />
+
+                <Button
+                    android:id="@+id/btnEscanear"
+                    style="@style/TonalliBotonBorde"
+                    android:layout_width="wrap_content"
+                    android:layout_height="52dp"
+                    android:layout_marginStart="8dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:text="Escanear"
+                    app:icon="@drawable/ic_scan" />
             </LinearLayout>
 
             <TextView

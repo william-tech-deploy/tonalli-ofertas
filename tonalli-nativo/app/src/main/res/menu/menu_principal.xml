@@ -1,22 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Menú de opciones de la ActionBar (tema T7). -->
+<!-- Menú de opciones de la ActionBar (tema T7): la campana a la vista y el resto en el menú de tres puntos. -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/op_alertas"
+        android:icon="@drawable/ic_bell"
+        android:title="Mis alertas"
+        app:iconTint="@color/tonalli_on_background"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/op_sincronizar"
         android:title="Sincronizar"
-        app:showAsAction="ifRoom|withText" />
+        app:showAsAction="never" />
     <item
         android:id="@+id/op_cercanas"
         android:title="Ordenar por cercanía (GPS)"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/op_temperatura"
-        android:title="Ordenar por temperatura"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/op_alertas"
-        android:title="Mis alertas"
         app:showAsAction="never" />
     <item
         android:id="@+id/op_acerca"

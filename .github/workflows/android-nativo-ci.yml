@@ -1,5 +1,7 @@
 name: android-nativo-ci
-# Compila la app Android nativa (prototipo 2) y deja el APK de prueba para descargar.
+# 1) Prueba el esquema de Supabase (RLS y triggers) en un Supabase local.
+# 2) Compila la app nativa apuntando a ese Supabase.
+# 3) La maneja en un emulador: registro, publicar, votar, escáner; guarda capturas.
 on:
   push: { paths: ['tonalli-nativo/**', '.github/workflows/android-nativo-ci.yml'] }
   workflow_dispatch:
@@ -12,15 +14,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { persist-credentials: false }
+
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - name: Supabase local
+        run: |
+          mkdir -p /tmp/sb && cd /tmp/sb && supabase init --force > /dev/null
+          supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,storage-api,postgres-meta,supavisor
+          supabase status -o env | sed 's/"//g' > /tmp/sb.env
+          grep -o '^[A-Z_]*' /tmp/sb.env
+      - name: Aplicar el esquema y probar su seguridad
+        run: |
+          set -a; . /tmp/sb.env; set +a
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -q -f supabase/esquema.sql
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -q -f supabase/esquema.sql   # se puede ejecutar dos veces
+          SB_URL="$API_URL" SB_KEY="$ANON_KEY" python3 supabase/prueba_api.py
+          # deja la base limpia para la prueba en el emulador
+          psql "$DB_URL" -q -c "delete from auth.users;"
+
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '25' }
-      - run: chmod +x gradlew
-      - run: ./gradlew --no-daemon assembleDebug
-      - uses: actions/upload-artifact@v4
-        with:
-          name: tonalli-nativo-debug-apk
-          path: tonalli-nativo/app/build/outputs/apk/debug/*.apk
-      # Prueba de humo: abre las 4 pantallas en un emulador y guarda capturas.
+      - name: Compilar (apuntando al Supabase local)
+        run: |
+          set -a; . /tmp/sb.env; set +a
+          printf 'supabase.url=http://10.0.2.2:54321\nsupabase.key=%s\n' "$ANON_KEY" > local.properties
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+
       - name: Habilitar KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -31,20 +51,21 @@ jobs:
           api-level: 34
           arch: x86_64
           target: default
+          profile: pixel_6
+          disable-animations: true
           working-directory: tonalli-nativo
-          script: bash ci/smoke.sh
+          script: set -a && . /tmp/sb.env && set +a && SB_URL="$API_URL" SB_KEY="$ANON_KEY" python3 ci/e2e.py
+
       - uses: actions/upload-artifact@v4
-        if: always()
         with:
-          name: capturas-emulador
-          path: tonalli-nativo/capturas/
+          name: tonalli-nativo-debug-apk
+          path: tonalli-nativo/app/build/outputs/apk/debug/*.apk
       - name: Guardar capturas en la rama ci-capturas
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           cd capturas || exit 0
-          rm -f logcat.txt
           git init -q -b ci-capturas
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

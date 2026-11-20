@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Botón Publicar: círculo con un más, como en la versión web. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="26dp" android:height="26dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:pathData="M12,2.2a9.8,9.8 0 1,0 0.001,0z" android:strokeColor="#FF14213D" android:strokeWidth="1.8"
+        android:fillColor="#00000000" />
+    <path android:pathData="M12 7.5v9M7.5 12h9" android:strokeColor="#FF14213D" android:strokeWidth="2"
+        android:strokeLineCap="round" android:fillColor="#00000000" />
+</vector>

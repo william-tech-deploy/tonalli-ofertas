@@ -7,7 +7,7 @@
     android:background="@color/tonalli_background"
     android:orientation="vertical">
 
-    <!-- Barra superior: logo + nombre, y el menú de opciones a la derecha. -->
+    <!-- Barra superior: logo + nombre a la izquierda; campana y menú a la derecha. -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -17,16 +17,21 @@
         app:titleMarginStart="12dp"
         app:titleTextAppearance="@style/TonalliTituloBarra" />
 
-    <!-- Pestañas de categoría, como en la versión web. -->
+    <!-- Pestañas de categoría con ícono, como en la versión web. -->
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabs"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="52dp"
         android:background="@color/tonalli_background"
         app:tabGravity="start"
+        app:tabIconTint="@color/tonalli_on_surface"
         app:tabIndicatorColor="@color/tonalli_primary"
+        app:tabIndicatorFullWidth="true"
         app:tabIndicatorHeight="3dp"
+        app:tabInlineLabel="true"
         app:tabMode="scrollable"
+        app:tabPaddingEnd="14dp"
+        app:tabPaddingStart="14dp"
         app:tabRippleColor="@color/tonalli_primary_container"
         app:tabSelectedTextColor="@color/tonalli_on_surface"
         app:tabTextAppearance="@style/TonalliPestana"
@@ -37,17 +42,41 @@
         android:layout_height="1dp"
         android:background="@color/tonalli_outline_subtle" />
 
-    <TextView
-        android:id="@+id/tvOrden"
+    <!-- Selector Calientes / Nuevas / Cerca (control segmentado). -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
-        android:paddingTop="10dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="10dp"
-        android:textColor="@color/tonalli_on_surface_muted"
-        android:textSize="13sp"
-        android:textStyle="bold" />
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_segmentos"
+        android:padding="4dp">
+
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/grupoOrden"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:checkedButton="@+id/btnCalientes"
+            app:selectionRequired="true"
+            app:singleSelection="true">
+
+            <Button
+                android:id="@+id/btnCalientes"
+                style="@style/TonalliSegmento"
+                android:text="Calientes" />
+
+            <Button
+                android:id="@+id/btnNuevas"
+                style="@style/TonalliSegmento"
+                android:text="Nuevas" />
+
+            <Button
+                android:id="@+id/btnCerca"
+                style="@style/TonalliSegmento"
+                android:text="Cerca" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+    </FrameLayout>
 
     <View
         android:layout_width="match_parent"
@@ -79,6 +108,18 @@
             android:visibility="gone" />
     </FrameLayout>
 
+    <TextView
+        android:id="@+id/tvNota"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/tonalli_background"
+        android:paddingStart="16dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="6dp"
+        android:textColor="@color/tonalli_on_surface_muted"
+        android:textSize="12sp" />
+
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
@@ -94,6 +135,8 @@
         app:elevation="0dp"
         app:itemActiveIndicatorStyle="@style/TonalliIndicadorNav"
         app:itemIconTint="@color/nav_item"
+        app:itemTextAppearanceActive="@style/TonalliNavTexto"
+        app:itemTextAppearanceInactive="@style/TonalliNavTexto"
         app:itemTextColor="@color/nav_item"
         app:labelVisibilityMode="labeled"
         app:menu="@menu/nav_principal" />

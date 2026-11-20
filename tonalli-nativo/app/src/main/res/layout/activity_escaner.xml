@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/tonalli_background"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/tonalli_background"
+        app:titleTextAppearance="@style/TonalliTituloBarra" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/tonalli_outline_subtle" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Botón grande para escanear -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnEscanear"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:text="Escanear código de barras"
+            android:textSize="16sp"
+            app:icon="@drawable/ic_scan"
+            app:iconGravity="textStart"
+            app:iconSize="26dp"
+            app:iconTint="@color/tonalli_on_primary" />
+
+        <TextView
+            style="@style/TonalliEtiqueta"
+            android:labelFor="@+id/etBuscar"
+            android:text="O escribe el código o el producto" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/etBuscar"
+                style="@style/TonalliCampo"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:hint="Ej. 7412345000110 o leche"
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLength="60" />
+
+            <Button
+                android:id="@+id/btnBuscar"
+                style="@style/TonalliBotonBorde"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:layout_marginStart="8dp"
+                android:contentDescription="Buscar"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:padding="0dp"
+                app:icon="@drawable/ic_search"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvResumen"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:textColor="@color/tonalli_on_surface"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/tonalli_outline_subtle" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ListView
+            android:id="@+id/lvResultados"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:divider="@drawable/linea"
+            android:dividerHeight="1dp" />
+
+        <TextView
+            android:id="@+id/tvVacio"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:padding="32dp"
+            android:textColor="@color/tonalli_on_surface_muted"
+            android:textSize="15sp"
+            android:visibility="gone" />
+    </FrameLayout>
+</LinearLayout>

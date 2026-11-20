@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/tonalli_background"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/tonalli_background"
+        app:titleTextAppearance="@style/TonalliTituloBarra" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/tonalli_outline_subtle" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <!-- Sin sesión -->
+            <LinearLayout
+                android:id="@+id/sinSesion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_tarjeta"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <ImageView
+                    android:layout_width="52dp"
+                    android:layout_height="60dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_logo" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:fontFamily="@font/bricolage"
+                    android:gravity="center"
+                    android:text="Únete a la comunidad"
+                    android:textColor="@color/tonalli_on_surface"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:text="Con una cuenta publicas ofertas para todos, votas si son reales y subes de nivel: Chispa, Brasa, Fogata y Hoguera."
+                    android:textColor="@color/tonalli_on_surface_muted"
+                    android:textSize="15sp" />
+
+                <Button
+                    android:id="@+id/btnCrear"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="18dp"
+                    android:text="Crear cuenta" />
+
+                <Button
+                    android:id="@+id/btnEntrar"
+                    style="@style/TonalliBotonBorde"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="8dp"
+                    android:text="Ya tengo cuenta" />
+
+                <TextView
+                    android:id="@+id/tvAviso"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center"
+                    android:textColor="@color/tonalli_error"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- Con sesión -->
+            <LinearLayout
+                android:id="@+id/conSesion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_tarjeta"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvInicial"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:background="@drawable/bg_avatar"
+                        android:fontFamily="@font/bricolage"
+                        android:gravity="center"
+                        android:textColor="#FFFFFF"
+                        android:textSize="28sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="14dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tvUsuario"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="@font/bricolage"
+                            android:textColor="@color/tonalli_on_surface"
+                            android:textSize="22sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvCorreo"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="1"
+                            android:textColor="@color/tonalli_on_surface_muted"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_tarjeta"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/TonalliEtiqueta"
+                        android:layout_marginTop="0dp"
+                        android:text="Tu nivel" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="26dp"
+                            android:layout_height="26dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_flame"
+                            app:tint="@color/tonalli_primary" />
+
+                        <TextView
+                            android:id="@+id/tvNivel"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/bricolage"
+                            android:textColor="@color/tonalli_on_surface"
+                            android:textSize="20sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvKarma"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/tonalli_primary"
+                            android:textSize="15sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/pbNivel"
+                        style="@android:style/Widget.ProgressBar.Horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="10dp"
+                        android:layout_marginTop="12dp"
+                        android:progressDrawable="@drawable/barra_nivel" />
+
+                    <TextView
+                        android:id="@+id/tvSiguiente"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:textColor="@color/tonalli_on_surface_muted"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="0dp"
+                    android:background="@drawable/bg_tarjeta"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp">
+
+                    <TextView
+                        android:id="@+id/tvOfertas"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/bricolage"
+                        android:text="0"
+                        android:textColor="@color/tonalli_on_surface"
+                        android:textSize="26sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Ofertas"
+                        android:textColor="@color/tonalli_on_surface_muted"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_tarjeta"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp">
+
+                    <TextView
+                        android:id="@+id/tvVotos"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/bricolage"
+                        android:text="0"
+                        android:textColor="@color/tonalli_on_surface"
+                        android:textSize="26sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Votos dados"
+                        android:textColor="@color/tonalli_on_surface_muted"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_tarjeta"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingTop="14dp"
+                    android:paddingBottom="14dp">
+
+                    <TextView
+                        android:id="@+id/tvAlertas"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/bricolage"
+                        android:text="0"
+                        android:textColor="@color/tonalli_on_surface"
+                        android:textSize="26sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Alertas"
+                        android:textColor="@color/tonalli_on_surface_muted"
+                        android:textSize="13sp" />
+                </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="El karma lo calcula el servidor: +10 por cada oferta publicada, +1 por cada voto a favor y −1 por cada voto en contra."
+                    android:textColor="@color/tonalli_on_surface_muted"
+                    android:textSize="13sp" />
+
+                <Button
+                    android:id="@+id/btnSalir"
+                    style="@style/TonalliBotonBorde"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="18dp"
+                    android:text="Cerrar sesión"
+                    android:textColor="@color/tonalli_error" />
+            </LinearLayout>
+        </FrameLayout>
+    </ScrollView>
+</LinearLayout>
