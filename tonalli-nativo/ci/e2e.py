@@ -160,7 +160,7 @@ def publicar():
     captura("07-publicar-lleno", 0.5)
     tocar("btnGuardar")
     time.sleep(4)
-    s, r = api("GET", "/rest/v1/ofertas?select=titulo,categoria,ean,autor,perfiles(usuario)&titulo=eq.Cargador%20USB-C%2025%20W")
+    s, r = api("GET", "/rest/v1/ofertas?select=titulo,categoria,ean,autor,perfiles!ofertas_autor_fkey(usuario)&titulo=eq.Cargador%20USB-C%2025%20W")
     ok("publicar desde la app guarda en Supabase con su autor", s == 200 and len(r) == 1
        and r[0]["perfiles"]["usuario"] == "emu_cazador" and r[0]["ean"] == "7412345000592", (s, r))
 
