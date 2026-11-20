@@ -26,7 +26,9 @@ import java.util.Locale;
  */
 public final class Supabase {
 
-    private static final String URL_BASE = BuildConfig.SUPABASE_URL.replaceAll("/+$", "");
+    // Acepta la dirección aunque se haya copiado con /rest/v1 al final (la de "Data API").
+    private static final String URL_BASE = BuildConfig.SUPABASE_URL.trim()
+            .replaceAll("/+$", "").replaceAll("/(rest|auth)/v1$", "");
     private static final String CLAVE = BuildConfig.SUPABASE_KEY; // clave pública (anon / publishable)
     private static final int MAX_BYTES = 1024 * 1024;
 
