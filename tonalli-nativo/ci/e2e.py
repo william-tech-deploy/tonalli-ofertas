@@ -23,12 +23,15 @@ def captura(nombre, espera=2.5):
 
 
 def nodos():
-    adb("shell", "uiautomator", "dump", "/sdcard/ui.xml")
-    xml = adb("shell", "cat", "/sdcard/ui.xml")
-    try:
-        return list(ET.fromstring(xml[xml.index("<"):]).iter("node"))
-    except Exception:
-        return []
+    for _ in range(3):  # el volcado falla si la pantalla todavía se está animando
+        adb("shell", "rm", "-f", "/sdcard/ui.xml")
+        adb("shell", "uiautomator", "dump", "/sdcard/ui.xml")
+        xml = adb("shell", "cat", "/sdcard/ui.xml")
+        try:
+            return list(ET.fromstring(xml[xml.index("<"):]).iter("node"))
+        except Exception:
+            time.sleep(1)
+    return []
 
 
 def centro(n):
@@ -62,6 +65,7 @@ def escribir(id_, valor):
     tocar(id_)
     adb("shell", "input", "text", valor.replace(" ", "%s"))
     time.sleep(0.4)
+    ocultar_teclado()
 
 
 def ocultar_teclado():
@@ -117,8 +121,8 @@ ok("oferta de otra persona creada en el servidor", s == 201, (s, r))
 
 # ---------------------------------------------------------------- pantallas
 abrir("MainActivity"); captura("01-inicio", 6)
-ok("la lista trae la oferta de Supabase", buscar(texto="Aceite vegetal", desplazar=False) is not None)
 tocar("btnNuevas", desplazar=False); captura("02-nuevas", 1.5)
+ok("la lista trae la oferta de Supabase", buscar(texto="Aceite vegetal", desplazar=False) is not None)
 tocar("btnCalientes", desplazar=False)
 
 abrir("PerfilActivity"); captura("03-perfil-sin-sesion")
@@ -163,7 +167,8 @@ paso("publicar", publicar)
 
 def votar():
     abrir("MainActivity"); time.sleep(4)
-    tocar(texto="Aceite vegetal")
+    tocar("btnNuevas", desplazar=False)
+    tocar(texto="Aceite vegetal", desplazar=False)
     captura("08-detalle", 1.5)
     tocar("btnSubir")
     time.sleep(3)

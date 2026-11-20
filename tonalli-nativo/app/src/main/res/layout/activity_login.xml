@@ -118,7 +118,7 @@
             android:id="@+id/etClave"
             style="@style/TonalliCampo"
             android:autofillHints="password"
-            android:hint="••••••••••"
+            android:hint="Tu contraseña"
             android:importantForAutofill="yes"
             android:inputType="textPassword"
             android:maxLength="72" />
