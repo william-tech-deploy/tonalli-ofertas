@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- La raíz recibe el espacio del teclado como relleno inferior; el ScrollView de adentro se
+     achica y desplaza el campo activo para que siempre quede a la vista. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/tonalli_background"
+    android:orientation="vertical">
+
+<ScrollView
+    android:id="@+id/scroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:fillViewport="true">
 
     <LinearLayout
@@ -150,3 +158,4 @@
             android:text="Iniciar sesión" />
     </LinearLayout>
 </ScrollView>
+</LinearLayout>

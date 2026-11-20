@@ -17,6 +17,16 @@ public final class Ui {
         ViewCompat.setOnApplyWindowInsetsListener(raiz, (v, insets) -> {
             Insets barras = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
             v.setPadding(barras.left, barras.top, barras.right, barras.bottom);
+            // Con el teclado abierto, se desplaza el campo activo para que quede encima del teclado.
+            if (insets.isVisible(WindowInsetsCompat.Type.ime())) {
+                v.post(() -> {
+                    View foco = v.findFocus();
+                    if (foco != null) {
+                        android.graphics.Rect r = new android.graphics.Rect(0, 0, foco.getWidth(), foco.getHeight() + 24);
+                        foco.requestRectangleOnScreen(r, false);
+                    }
+                });
+            }
             return insets;
         });
     }
