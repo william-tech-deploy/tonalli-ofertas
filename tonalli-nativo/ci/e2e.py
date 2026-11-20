@@ -69,12 +69,15 @@ def escribir(id_, valor):
 
 
 def ocultar_teclado():
-    adb("shell", "input", "keyevent", "111")  # ESC cierra el teclado sin salir de la pantalla
-    time.sleep(0.5)
+    # Atrás cierra el teclado; solo se pulsa si el teclado está abierto (si no, saldría de la pantalla).
+    if "mInputShown=true" in adb("shell", "dumpsys", "input_method"):
+        adb("shell", "input", "keyevent", "4")
+        time.sleep(0.8)
 
 
 def abrir(actividad, *extras):
-    adb("shell", "am", "start", "-W", "-n", f"{PKG}/.{actividad}", *extras)
+    # NEW_TASK | CLEAR_TASK: cada pantalla se abre sola, sin las anteriores encima
+    adb("shell", "am", "start", "-W", "-f", "0x10008000", "-n", f"{PKG}/.{actividad}", *extras)
     time.sleep(2)
 
 
